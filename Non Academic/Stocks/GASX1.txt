@@ -1,0 +1,10 @@
+SALE!
+
+Item          : GASX
+Item          : https://finance.yahoo.com/quote/GASX?p=GASX&.tsrc=fin-srch
+Date and time : 2020-03-10 10:02:23.969568
+Quantity      : 12
+Price Sold    : 327.48
+Buy Price     : 390.0
+Value         : 3929.76
+Bankroll      : 13420.4177

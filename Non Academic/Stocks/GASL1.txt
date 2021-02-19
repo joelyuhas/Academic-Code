@@ -1,0 +1,10 @@
+SALE!
+
+Item          : GASL
+Item          : https://finance.yahoo.com/quote/GASL?p=GASL&.tsrc=fin-srch
+Date and time : 2020-03-10 09:45:42.038585
+Quantity      : 19223
+Price Sold    : 0.24
+Buy Price     : 0.2601
+Value         : 4613.5199999999995
+Bankroll      : 4946.657700000001

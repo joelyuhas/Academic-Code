@@ -1,0 +1,10 @@
+SALE!
+
+Item          : SPXL
+Item          : https://finance.yahoo.com/quote/spxl?ltr=1
+Date and time : 2020-03-10 10:28:07.103025
+Quantity      : 132
+Price Sold    : 42.41
+Buy Price     : 37.86
+Value         : 5598.12
+Bankroll      : 19018.5377
