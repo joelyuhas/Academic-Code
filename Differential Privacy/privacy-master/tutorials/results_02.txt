@@ -1,0 +1,57 @@
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 1{'accuracy': 0.7965113, 'accuracy_baseline': 0.76377374, 'auc': 0.86378837, 'auc_precision_recall': 0.95559895, 'average_loss': 1.1652209, 'label/mean': 0.76377374, 'loss': 1.1652209, 'precision': 0.9273, 'prediction/mean': 0.65222037, 'recall': 0.7959791, 'global_step': 255} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 10{'accuracy': 0.7731712, 'accuracy_baseline': 0.76377374, 'auc': 0.53720164, 'auc_precision_recall': 0.8886027, 'average_loss': 4.5759454, 'label/mean': 0.76377374, 'loss': 4.5759454, 'precision': 0.7710866, 'prediction/mean': 0.9901447, 'recall': 0.9998392, 'global_step': 2544} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 50{'accuracy': 0.81978995, 'accuracy_baseline': 0.76377374, 'auc': 0.87853247, 'auc_precision_recall': 0.9604645, 'average_loss': 0.9500807, 'label/mean': 0.76377374, 'loss': 0.9500807, 'precision': 0.92517674, 'prediction/mean': 0.68332994, 'recall': 0.8312827, 'global_step': 12720} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.84663105, 'accuracy_baseline': 0.76377374, 'auc': 0.8221568, 'auc_precision_recall': 0.94427073, 'average_loss': 0.8914571, 'label/mean': 0.76377374, 'loss': 0.8914571, 'precision': 0.8640293, 'prediction/mean': 0.8359673, 'recall': 0.94845194, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 500{'accuracy': 0.79730976, 'accuracy_baseline': 0.76377374, 'auc': 0.8799744, 'auc_precision_recall': 0.96152055, 'average_loss': 1.1040794, 'label/mean': 0.76377374, 'loss': 1.1040794, 'precision': 0.94810164, 'prediction/mean': 0.6275478, 'recall': 0.77716124, 'global_step': 127192} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.84497267, 'accuracy_baseline': 0.76377374, 'auc': 0.809838, 'auc_precision_recall': 0.94206405, 'average_loss': 1.0151633, 'label/mean': 0.76377374, 'loss': 1.0151633, 'precision': 0.8530313, 'prediction/mean': 0.85898936, 'recall': 0.9629272, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.3 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.79780114, 'accuracy_baseline': 0.76377374, 'auc': 0.5957726, 'auc_precision_recall': 0.8995442, 'average_loss': 5.5889707, 'label/mean': 0.76377374, 'loss': 5.5889707, 'precision': 0.7917172, 'prediction/mean': 0.96198505, 'recall': 0.9977483, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.5 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.6174068, 'accuracy_baseline': 0.76377374, 'auc': 0.7678459, 'auc_precision_recall': 0.9405385, 'average_loss': 10.079405, 'label/mean': 0.76377374, 'loss': 10.079405, 'precision': 0.98697424, 'prediction/mean': 0.39178672, 'recall': 0.5057499, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.75 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.80222344, 'accuracy_baseline': 0.76377374, 'auc': 0.59271663, 'auc_precision_recall': 0.8990271, 'average_loss': 12.6932125, 'label/mean': 0.76377374, 'loss': 12.6932125, 'precision': 0.79552305, 'prediction/mean': 0.9574387, 'recall': 0.9974266, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.7358885, 'accuracy_baseline': 0.76377374, 'auc': 0.8608078, 'auc_precision_recall': 0.9582932, 'average_loss': 1.9258918, 'label/mean': 0.76377374, 'loss': 1.9258918, 'precision': 0.9679052, 'prediction/mean': 0.5362309, 'recall': 0.67663854, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 256 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.8058473, 'accuracy_baseline': 0.76377374, 'auc': 0.6233092, 'auc_precision_recall': 0.9046341, 'average_loss': 4.3232718, 'label/mean': 0.76377374, 'loss': 4.3232718, 'precision': 0.7992771, 'prediction/mean': 0.95146966, 'recall': 0.99589866, 'global_step': 12720} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 1024 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.7525336, 'accuracy_baseline': 0.76377374, 'auc': 0.82114065, 'auc_precision_recall': 0.9498708, 'average_loss': 13.282207, 'label/mean': 0.76377374, 'loss': 13.282207, 'precision': 0.96431726, 'prediction/mean': 0.5560353, 'recall': 0.7019702, 'global_step': 3180} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 100{'accuracy': 0.78066456, 'accuracy_baseline': 0.76377374, 'auc': 0.87647897, 'auc_precision_recall': 0.9613275, 'average_loss': 1.3291045, 'label/mean': 0.76377374, 'loss': 1.3291045, 'precision': 0.9527069, 'prediction/mean': 0.60085917, 'recall': 0.7500603, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.5 MB: 1 EP: 100{'accuracy': 0.7914747, 'accuracy_baseline': 0.76377374, 'auc': 0.5884905, 'auc_precision_recall': 0.89819086, 'average_loss': 3.5018911, 'label/mean': 0.76377374, 'loss': 3.5018911, 'precision': 0.78585887, 'prediction/mean': 0.97090364, 'recall': 0.9992762, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 2.0 MB: 1 EP: 100{'accuracy': 0.73963517, 'accuracy_baseline': 0.76377374, 'auc': 0.86157596, 'auc_precision_recall': 0.9588805, 'average_loss': 1.9875302, 'label/mean': 0.76377374, 'loss': 1.9875302, 'precision': 0.96834284, 'prediction/mean': 0.5401273, 'recall': 0.6813832, 'global_step': 25439} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 1000{'accuracy': 0.79853815, 'accuracy_baseline': 0.76377374, 'auc': 0.6196881, 'auc_precision_recall': 0.90400493, 'average_loss': 2.8824282, 'label/mean': 0.76377374, 'loss': 2.8824282, 'precision': 0.79206276, 'prediction/mean': 0.96137077, 'recall': 0.9983112, 'global_step': 254383} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 1{'accuracy': 0.82, 'accuracy_baseline': 0.79142857, 'auc': 0.82204145, 'auc_precision_recall': 0.9492797, 'average_loss': 1.2456468, 'label/mean': 0.79142857, 'loss': 1.2456468, 'precision': 0.905303, 'prediction/mean': 0.7425887, 'recall': 0.86281586, 'global_step': 16} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 1{'accuracy': 0.79714286, 'accuracy_baseline': 0.7885714, 'auc': 0.7496328, 'auc_precision_recall': 0.9324628, 'average_loss': 0.95040005, 'label/mean': 0.7885714, 'loss': 0.95040005, 'precision': 0.79538906, 'prediction/mean': 0.97803634, 'recall': 1.0, 'global_step': 8} EPSILON: 0
+
+Test Execution
+ LR: 0.15 BS: 128 NM: 1.1 MB: 1 EP: 1{'accuracy': 0.74, 'accuracy_baseline': 0.7342857, 'auc': 0.8290447, 'auc_precision_recall': 0.9327642, 'average_loss': 1.3049171, 'label/mean': 0.7342857, 'loss': 1.3049171, 'precision': 0.915, 'prediction/mean': 0.58400035, 'recall': 0.71206224, 'global_step': 12} EPSILON: 0
+
