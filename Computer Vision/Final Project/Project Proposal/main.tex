@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Project Proposal}
+\date{March 2019}
+
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\maketitle
+
+\section{Project Title}
+Fruit Recognition
+
+\section{Project Team Members}
+Joel Yuhas
+Avigai Koronet
+
+\section{Project Goals}
+The goal of the project is to have the program be able to identify several different types of fruit, with two being the minimum. Additionally, it would be preferred to have the program be able to recognize the fruit while still attached to the tree, but the minimum requirement would be to identify fruit from a picture with a plain background. An extended objective would be to have the program be able to identify how ripe the fruit is, but that would very likely be outside the scope of the project.
+
+Additionally, because of their similarities, the fruit portion could also be replaced with vegtables, flowers, or any other agriculture type fairly easily while using the same process.
+
+\section{Related Work}
+The following piece worked on reconsign fruit while still on the tree and while also using night vision.
+
+DeepFruits: A Frut Detection System Using a Deep Neural Networks 
+\url{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5017387/#B5-sensors-16-0122}
+
+Automatic Fruit Recognition from Natural Images Using Color and Texture Features
+\url{https://ieeexplore.ieee.org/document/8074025}
+
+\section{Methodology}
+If detecting the fruit off of the tree/plant, the first step will be to section off the fruit from the plant that it is on. This could be done through recognizing the different colors and shapes compared to the leaves. The textures can also be used to separate them as well.
+
+Next, once the fruit is separated, the fruit itself will need to be recognized. Both of these steps can be achieved with the Neural Network.
+
+Faster R-CNN would be the primary framework to use since it is used for object detection and has been used in similar projects as well.
+\href{https://arxiv.org/abs/1506.01497}
+
+\section{Data Sets/Anticipated Results}
+Fruits 360 Dataset
+\url{https://www.kaggle.com/moltean/fruits}
+
+Hyperspectral Database of Fruits and Vegtables (white backgrount)
+\url{https://www.osapublishing.org/josaa/abstract.cfm?uri=josaa-35-4-B256#articleReferences}
+
+Non Fruit:
+Leaves Data Set
+\url{https://www.sciencedirect.com/science/article/pii/S1877050915022061?via%3Dihub}
+
+
+Anticipated results for the minimum requirements will to have the program be able to recognize and identify at least two different fruits depending on the picture.
+
+\section{Time Table with Milestones and Work Assigned}
+
+
+Time Table
+\begin{itemize}
+\item Set up the deep learning architecture (Faster R-CNN)
+\item Solidify the two data sets that will be used
+\item Based on the data sets, determine how many classes there should be
+\item Determine the classifier for the network
+\item Begin developing the network where needed
+\item Begin training the network
+\item Analyze and test training results
+\item Debug and retrain as necessary
+\item Compare results to other to different architectures
+\item Complete the report
+
+\end{itemize}
+
+The work will be divided in such a way that each team member will have an understanding of each section but will be able to work on different sections in parallel. For example, the initialization of the network can be set up by one member while the other finalizes the data base. One member can run the test while the other begins to compare the results already goatherd. One member can debug while the other begins writing the final report.
+
+
+
+\bibliographystyle{plain}
+
+\end{document}
