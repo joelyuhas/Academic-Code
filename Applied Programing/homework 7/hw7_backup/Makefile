@@ -1,0 +1,108 @@
+# Joel Yuhas
+# Homework 7
+# MakeFile
+
+
+.SILENT:
+
+# Output files
+MEM = mem.txt
+SOURCE = hw7.txt apmatrix.c gsl_test.c
+PROG = hw7 gsltest gsltest_time hw6_time
+RESULTS = out.txt mem.txt
+#INPUTFILE = ./polynomials.txt
+#SEARCHWORD = "space"
+VERBOSE = " "
+
+# Compiler and Directives
+CC      = gcc
+#CCPP     = g++
+#CFLAGS  = -Wall -std=c99 -pedantic -lm
+CFLAGS  = -ansi -lgsl -lgslcblas
+#CPPFLAGS = -Wall -pedantic 
+LFLAGS  = -DEN_TIME
+#MFLAGS  = -DMDEBUG
+#LSOUT = ls2.txt
+
+#SIZEOUT = size2.txt
+
+
+# Build list of OBJ files
+OBJS = $(patsubst %.c, %.o, $(SOURCE))
+
+
+
+.c.o: echo "compile $<"
+	$(CC) $(CFLAGS) -c $<
+
+
+#testList testTime
+all: homework_7 gsl_test test_time_hw7 test_time_gsl_test
+	echo "Compiling Files"
+
+homework_7: hw7.c
+	$(CC) $(CFLAGS) hw7.c apmatrix.c -o hw7
+
+gsl_test : gsl_test.c
+	$(CC) $(CFLAGS) gsl_test.c -o gsltest
+
+test_time_hw7 : hw7.c
+	$(CC) $(CFLAGS) $(LFLAGS) hw7.c apmatrix.c -o hw7_time
+
+test_time_gsl_test : gsl_test.c
+	$(CC) $(CFLAGS) $(LFLAGS) gsl_test.c -o gsltest_time
+
+test: homework_7
+	echo "Testing Homework 7 ge1.txt" &> out.txt
+	-./hw7 -input ge1.txt -$(VERBOSE) #&>> out.txt
+	echo "Testing Homework 7 ge2.txt" &>> out.txt
+	-./hw7 -input ge2.txt -$(VERBOSE) #&>> out.txt
+	echo "Testing Homework 7 ge3.txt" &>> out.txt
+	-./hw7 -input ge3.txt -$(VERBOSE) #&>> out.txt
+	echo "Testing Homework 7 ge4.txt" &>> out.txt
+	-./hw7 -input ge4.txt -$(VERBOSE) #&>> out.txt
+	#cat ./out.txt
+
+gsl: gsl_test
+	echo "Testing GSL ge1.txt" &> out.txt
+	-./gsltest  -input ge1.txt -$(VERBOSE) &>> out.txt
+	echo "Testing GSL ge2.txt" &>> out.txt
+	-./gsltest  -input ge2.txt -$(VERBOSE) &>> out.txt
+	echo "Testing GSL ge3.txt" &>> out.txt
+	-./gsltest  -input ge3.txt -$(VERBOSE) &>> out.txt
+	echo "Testing GSL ge4.txt" &>> out.txt
+	-./gsltest  -input ge4.txt -$(VERBOSE) &>> out.txt
+	cat ./out.txt
+
+time: test_time_hw7 test_time_gsl_test
+	echo "Testing Time"
+	./gsltest_time -input rand.txt -$(VERBOSE) #&> out.txt
+	./hw7_time     -input rand.txt -$(VERBOSE) #&>> out.txt
+	#cat ./out.txt
+
+
+mem: homework_7
+	echo "running Valgrind on TestList, TestSearch"
+	
+	valgrind --tool=memcheck --leak-check=yes --track-origins=yes ./hw7 -input ge2.txt &> mem.txt
+	#valgrind --tool=memcheck --leak-check=yes --track-origins=yes ./gsl -input ge2.txt &> mem.txt
+	
+	echo "Results are:"
+	@cat mem.txt
+
+help:
+	echo ""
+	echo "Help Menu:"
+	echo ""
+	echo "	all    - compiles the c file, cpp file and the optomized file"
+	echo "	root   - runs the test program with a pre-set input file specified in the Makefile"
+	echo "	mem    - perfoms valgrind operation"
+	echo "	help   - displays this help window"
+	echo "	clean  - cleans all .o files, executable files and output files"
+	echo ""
+
+clean:
+	echo "Cleaning"
+	-rm -f $(PROG)
+	-rm -f $(RESULTS);
+	-rm -f *.o

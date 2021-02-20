@@ -1,0 +1,1400 @@
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                4456   4196112
+.fini                  14   4200568
+.rodata               776   4200584
+.eh_frame_hdr          52   4201360
+.eh_frame             196   4201416
+.ctors                 16   6298768
+.dtors                 16   6298784
+.jcr                    8   6298800
+.dynamic              400   6298808
+.got                    8   6299208
+.got.plt              120   6299216
+.data                   4   6299336
+.bss                  112   6299360
+.comment               45         0
+Total                7506
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                4456   4196112
+.fini                  14   4200568
+.rodata               776   4200584
+.eh_frame_hdr          52   4201360
+.eh_frame             196   4201416
+.ctors                 16   6298768
+.dtors                 16   6298784
+.jcr                    8   6298800
+.dynamic              400   6298808
+.got                    8   6299208
+.got.plt              120   6299216
+.data                   4   6299336
+.bss                  112   6299360
+.comment               45         0
+Total                7506
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                4456   4196112
+.fini                  14   4200568
+.rodata               776   4200584
+.eh_frame_hdr          52   4201360
+.eh_frame             196   4201416
+.ctors                 16   6298768
+.dtors                 16   6298784
+.jcr                    8   6298800
+.dynamic              400   6298808
+.got                    8   6299208
+.got.plt              120   6299216
+.data                   4   6299336
+.bss                  112   6299360
+.comment               45         0
+Total                7506
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2296   4196112
+.fini                  14   4198408
+.rodata               688   4198424
+.eh_frame_hdr          52   4199112
+.eh_frame             236   4199168
+.ctors                 16   6296560
+.dtors                 16   6296576
+.jcr                    8   6296592
+.dynamic              400   6296600
+.got                    8   6297000
+.got.plt              120   6297008
+.data                   4   6297128
+.bss                  112   6297152
+.comment               45         0
+Total                5298
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2536   4196112
+.fini                  14   4198648
+.rodata               688   4198664
+.eh_frame_hdr          52   4199352
+.eh_frame             244   4199408
+.ctors                 16   6296808
+.dtors                 16   6296824
+.jcr                    8   6296840
+.dynamic              400   6296848
+.got                    8   6297248
+.got.plt              120   6297256
+.data                   4   6297376
+.bss                  112   6297408
+.comment               45         0
+Total                5546
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2280   4196112
+.fini                  14   4198392
+.rodata               688   4198408
+.eh_frame_hdr          52   4199096
+.eh_frame             236   4199152
+.ctors                 16   6296544
+.dtors                 16   6296560
+.jcr                    8   6296576
+.dynamic              400   6296584
+.got                    8   6296984
+.got.plt              120   6296992
+.data                   4   6297112
+.bss                  112   6297120
+.comment               45         0
+Total                5282
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2488   4196112
+.fini                  14   4198600
+.rodata               688   4198616
+.eh_frame_hdr          52   4199304
+.eh_frame             236   4199360
+.ctors                 16   6296752
+.dtors                 16   6296768
+.jcr                    8   6296784
+.dynamic              400   6296792
+.got                    8   6297192
+.got.plt              120   6297200
+.data                   4   6297320
+.bss                  112   6297344
+.comment               45         0
+Total                5490
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2968   4196112
+.fini                  14   4199080
+.rodata               688   4199096
+.eh_frame_hdr          52   4199784
+.eh_frame             276   4199840
+.ctors                 16   6297272
+.dtors                 16   6297288
+.jcr                    8   6297304
+.dynamic              400   6297312
+.got                    8   6297712
+.got.plt              120   6297720
+.data                   4   6297840
+.bss                  112   6297856
+.comment               45         0
+Total                6010
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2792   4196112
+.fini                  14   4198904
+.rodata               688   4198920
+.eh_frame_hdr          52   4199608
+.eh_frame             276   4199664
+.ctors                 16   6297096
+.dtors                 16   6297112
+.jcr                    8   6297128
+.dynamic              400   6297136
+.got                    8   6297536
+.got.plt              120   6297544
+.data                   4   6297664
+.bss                  112   6297696
+.comment               45         0
+Total                5834
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                5384   4196112
+.fini                  14   4201496
+.rodata               776   4201512
+.eh_frame_hdr          52   4202288
+.eh_frame             196   4202344
+.ctors                 16   6299696
+.dtors                 16   6299712
+.jcr                    8   6299728
+.dynamic              400   6299736
+.got                    8   6300136
+.got.plt              120   6300144
+.data                   4   6300264
+.bss                  112   6300288
+.comment               45         0
+Total                8434
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2296   4196112
+.fini                  14   4198408
+.rodata               688   4198424
+.eh_frame_hdr          52   4199112
+.eh_frame             236   4199168
+.ctors                 16   6296560
+.dtors                 16   6296576
+.jcr                    8   6296592
+.dynamic              400   6296600
+.got                    8   6297000
+.got.plt              120   6297008
+.data                   4   6297128
+.bss                  112   6297152
+.comment               45         0
+Total                5298
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2760   4196112
+.fini                  14   4198872
+.rodata               688   4198888
+.eh_frame_hdr          52   4199576
+.eh_frame             244   4199632
+.ctors                 16   6297032
+.dtors                 16   6297048
+.jcr                    8   6297064
+.dynamic              400   6297072
+.got                    8   6297472
+.got.plt              120   6297480
+.data                   4   6297600
+.bss                  112   6297632
+.comment               45         0
+Total                5770
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2280   4196112
+.fini                  14   4198392
+.rodata               688   4198408
+.eh_frame_hdr          52   4199096
+.eh_frame             236   4199152
+.ctors                 16   6296544
+.dtors                 16   6296560
+.jcr                    8   6296576
+.dynamic              400   6296584
+.got                    8   6296984
+.got.plt              120   6296992
+.data                   4   6297112
+.bss                  112   6297120
+.comment               45         0
+Total                5282
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2680   4196112
+.fini                  14   4198792
+.rodata               688   4198808
+.eh_frame_hdr          52   4199496
+.eh_frame             236   4199552
+.ctors                 16   6296944
+.dtors                 16   6296960
+.jcr                    8   6296976
+.dynamic              400   6296984
+.got                    8   6297384
+.got.plt              120   6297392
+.data                   4   6297512
+.bss                  112   6297536
+.comment               45         0
+Total                5682
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2968   4196112
+.fini                  14   4199080
+.rodata               688   4199096
+.eh_frame_hdr          52   4199784
+.eh_frame             276   4199840
+.ctors                 16   6297272
+.dtors                 16   6297288
+.jcr                    8   6297304
+.dynamic              400   6297312
+.got                    8   6297712
+.got.plt              120   6297720
+.data                   4   6297840
+.bss                  112   6297856
+.comment               45         0
+Total                6010
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2984   4196112
+.fini                  14   4199096
+.rodata               688   4199112
+.eh_frame_hdr          52   4199800
+.eh_frame             276   4199856
+.ctors                 16   6297288
+.dtors                 16   6297304
+.jcr                    8   6297320
+.dynamic              400   6297328
+.got                    8   6297728
+.got.plt              120   6297736
+.data                   4   6297856
+.bss                  112   6297888
+.comment               45         0
+Total                6026
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                3512   4196112
+.fini                  14   4199624
+.rodata               776   4199640
+.eh_frame_hdr          52   4200416
+.eh_frame             196   4200472
+.ctors                 16   6297824
+.dtors                 16   6297840
+.jcr                    8   6297856
+.dynamic              400   6297864
+.got                    8   6298264
+.got.plt              120   6298272
+.data                   4   6298392
+.bss                  112   6298400
+.comment               45         0
+Total                6562
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2296   4196112
+.fini                  14   4198408
+.rodata               688   4198424
+.eh_frame_hdr          52   4199112
+.eh_frame             236   4199168
+.ctors                 16   6296560
+.dtors                 16   6296576
+.jcr                    8   6296592
+.dynamic              400   6296600
+.got                    8   6297000
+.got.plt              120   6297008
+.data                   4   6297128
+.bss                  112   6297152
+.comment               45         0
+Total                5298
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2296   4196112
+.fini                  14   4198408
+.rodata               688   4198424
+.eh_frame_hdr          52   4199112
+.eh_frame             236   4199168
+.ctors                 16   6296560
+.dtors                 16   6296576
+.jcr                    8   6296592
+.dynamic              400   6296600
+.got                    8   6297000
+.got.plt              120   6297008
+.data                   4   6297128
+.bss                  112   6297152
+.comment               45         0
+Total                5298
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2280   4196112
+.fini                  14   4198392
+.rodata               688   4198408
+.eh_frame_hdr          52   4199096
+.eh_frame             236   4199152
+.ctors                 16   6296544
+.dtors                 16   6296560
+.jcr                    8   6296576
+.dynamic              400   6296584
+.got                    8   6296984
+.got.plt              120   6296992
+.data                   4   6297112
+.bss                  112   6297120
+.comment               45         0
+Total                5282
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2280   4196112
+.fini                  14   4198392
+.rodata               688   4198408
+.eh_frame_hdr          52   4199096
+.eh_frame             236   4199152
+.ctors                 16   6296544
+.dtors                 16   6296560
+.jcr                    8   6296576
+.dynamic              400   6296584
+.got                    8   6296984
+.got.plt              120   6296992
+.data                   4   6297112
+.bss                  112   6297120
+.comment               45         0
+Total                5282
+
+
+ 
+hw3t_c size -A: 
+hw3t_c  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2968   4196112
+.fini                  14   4199080
+.rodata               688   4199096
+.eh_frame_hdr          52   4199784
+.eh_frame             276   4199840
+.ctors                 16   6297272
+.dtors                 16   6297288
+.jcr                    8   6297304
+.dynamic              400   6297312
+.got                    8   6297712
+.got.plt              120   6297720
+.data                   4   6297840
+.bss                  112   6297856
+.comment               45         0
+Total                6010
+
+
+ 
+hw3t_cpp size -A: 
+hw3t_cpp  :
+section               size      addr
+.interp                 28   4194816
+.note.ABI-tag           32   4194844
+.note.gnu.build-id      36   4194876
+.gnu.hash               56   4194912
+.dynsym                696   4194968
+.dynstr                822   4195664
+.gnu.version            58   4196486
+.gnu.version_r         112   4196544
+.rela.dyn               72   4196656
+.rela.plt              576   4196728
+.init                   24   4197304
+.plt                   400   4197328
+.text                 5928   4197728
+.fini                   14   4203656
+.rodata                672   4203672
+.eh_frame_hdr          476   4204344
+.eh_frame             2028   4204824
+.gcc_except_table       74   4206852
+.ctors                  24   6304080
+.dtors                  16   6304104
+.jcr                     8   6304120
+.dynamic               448   6304128
+.got                     8   6304576
+.got.plt               216   6304584
+.data                    4   6304800
+.bss                   304   6304832
+.comment                45         0
+Total                13177
+
+
+ 
+hw3opt size -A: 
+hw3opt  :
+section              size      addr
+.interp                28   4194816
+.note.ABI-tag          32   4194844
+.note.gnu.build-id     36   4194876
+.gnu.hash              36   4194912
+.dynsym               360   4194952
+.dynstr               145   4195312
+.gnu.version           30   4195458
+.gnu.version_r         48   4195488
+.rela.dyn              48   4195536
+.rela.plt             288   4195584
+.init                  24   4195872
+.plt                  208   4195896
+.text                2968   4196112
+.fini                  14   4199080
+.rodata               688   4199096
+.eh_frame_hdr          52   4199784
+.eh_frame             276   4199840
+.ctors                 16   6297272
+.dtors                 16   6297288
+.jcr                    8   6297304
+.dynamic              400   6297312
+.got                    8   6297712
+.got.plt              120   6297720
+.data                   4   6297840
+.bss                  112   6297856
+.comment               45         0
+Total                6010
+
+
+ 

@@ -1,0 +1,7 @@
+./simple.txt 
+retreived line length 1 1
+ 
+retreived line length 1 0 1
+ 
+retreived line length 1 2 1 2
+ 

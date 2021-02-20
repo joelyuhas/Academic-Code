@@ -1,0 +1,11 @@
+Joel Yuhas
+Computer Engineering 2019
+
+Java, alright
+Python, alright
+Ada, Pretty good
+C++, not that much
+Bash, moderatly good
+C, beginner
+Assembly, moderatly good
+
