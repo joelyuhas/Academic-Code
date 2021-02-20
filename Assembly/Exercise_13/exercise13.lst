@@ -1,0 +1,2831 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;Exercise 06
+    2 00000000         ;****************************************************************
+    3 00000000         ;Exercies 5 which is usesd to demonstrate chrypotographic
+    4 00000000         ;and decifering techniques
+    5 00000000         ;Name:  Joel Yuhas
+    6 00000000         ;Date:  3/10/2016
+    7 00000000         ;Class:  CMPE-250
+    8 00000000         ;Section:  Lab section 2 2:00pm to 3:50pm
+    9 00000000         ;---------------------------------------------------------------
+   10 00000000         ;Keil Template for KL46
+   11 00000000         ;R. W. Melton
+   12 00000000         ;April 3, 2015
+   13 00000000         ;****************************************************************
+   14 00000000         ;Assembler directives
+   15 00000000                 THUMB
+   17 00000000         ;****************************************************************
+   18 00000000         ;Include files
+   19 00000000                 GET              MKL46Z4.s   ;Included by start.s
+   21 00000000         ;****************************************************************
+   22 00000000         ;EQUates
+   23 00000000         ;---------------------------------------------------------------
+   24 00000000         ;NVIC_ICER
+   25 00000000         ;31-00:CLRENA=masks for HW IRQ sources;
+   26 00000000         ;             read:   0 = unmasked;   1 = masked
+   27 00000000         ;             write:  0 = no effect;  1 = mask
+   28 00000000         ;12:UART0 IRQ mask
+   29 00000000 00001000 
+                       NVIC_ICER_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+   30 00000000         ;---------------------------------------------------------------
+   31 00000000         ;NVIC_ICPR
+   32 00000000         ;31-00:CLRPEND=pending status for HW IRQ sources;
+   33 00000000         ;             read:   0 = not pending;  1 = pending
+   34 00000000         ;             write:  0 = no effect;
+   35 00000000         ;                     1 = change status to not pending
+   36 00000000         ;12:UART0 IRQ pending status
+   37 00000000 00001000 
+                       NVIC_ICPR_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+   38 00000000         ;---------------------------------------------------------------
+   39 00000000         ;PORTx_PCRn (Port x pin control register n [for pin n])
+   40 00000000         ;___->10-08:Pin mux control (select 0 to 8)
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   41 00000000         ;Use provided PORT_PCR_MUX_SELECT_2_MASK
+   42 00000000         ;---------------------------------------------------------------
+   43 00000000         ;Port A
+   45 00000000 01000200 
+                       PORT_PCR_SET_PTA1_UART0_RX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   47 00000000 01000200 
+                       PORT_PCR_SET_PTA2_UART0_TX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   48 00000000         ;---------------------------------------------------------------
+   49 00000000         ;SIM_SCGC4
+   50 00000000         ;1->10:UART0 clock gate control (enabled)
+   51 00000000         ;Use provided SIM_SCGC4_UART0_MASK
+   52 00000000         ;---------------------------------------------------------------
+   53 00000000         ;SIM_SCGC5
+   54 00000000         ;1->09:Port A clock gate control (enabled)
+   55 00000000         ;Use provided SIM_SCGC5_PORTA_MASK
+   56 00000000         ;---------------------------------------------------------------
+   57 00000000         ;SIM_SOPT2
+   58 00000000         ;01=27-26:UART0SRC=UART0 clock source select
+   59 00000000         ;         (PLLFLLSEL determines MCGFLLCLK' or MCGPLLCLK/2)
+   60 00000000         ; 1=   16:PLLFLLSEL=PLL/FLL clock select (MCGPLLCLK/2)
+   62 00000000 04000000 
+                       SIM_SOPT2_UART0SRC_MCGPLLCLK
+                               EQU              (1 << SIM_SOPT2_UART0SRC_SHIFT)
+   64 00000000 04010000 
+                       SIM_SOPT2_UART0_MCGPLLCLK_DIV2
+                               EQU              (SIM_SOPT2_UART0SRC_MCGPLLCLK :OR: SIM_SOPT2_PLLFLLSEL_MASK)
+   65 00000000         ;---------------------------------------------------------------
+   66 00000000         ;SIM_SOPT5
+   67 00000000         ; 0->   16:UART0 open drain enable (disabled)
+   68 00000000         ; 0->   02:UART0 receive data select (UART0_RX)
+   69 00000000         ;00->01-00:UART0 transmit data select source (UART0_TX)
+   73 00000000 00010007 
+                       SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+                               EQU              (SIM_SOPT5_UART0ODE_MASK :OR:                                  SIM_SOPT
+5_UART0RXSRC_MASK :OR:                                  SIM_SOPT5_UART0TXSRC_MASK)
+   74 00000000         ;---------------------------------------------------------------
+   75 00000000         ;UART0_BDH
+   76 00000000         ;    0->  7:LIN break detect IE (disabled)
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   77 00000000         ;    0->  6:RxD input active edge IE (disabled)
+   78 00000000         ;    0->  5:Stop bit number select (1)
+   79 00000000         ;00001->4-0:SBR[12:0] (UART0CLK / [9600 * (OSR + 1)]) 
+   80 00000000         ;UART0CLK is MCGPLLCLK/2
+   81 00000000         ;MCGPLLCLK is 96 MHz
+   82 00000000         ;MCGPLLCLK/2 is 48 MHz
+   83 00000000         ;SBR = 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+   84 00000000 00000001 
+                       UART0_BDH_9600
+                               EQU              0x01
+   85 00000000         ;---------------------------------------------------------------
+   86 00000000         ;UART0_BDL
+   87 00000000         ;26->7-0:SBR[7:0] (UART0CLK / [9600 * (OSR + 1)])
+   88 00000000         ;UART0CLK is MCGPLLCLK/2
+   89 00000000         ;MCGPLLCLK is 96 MHz
+   90 00000000         ;MCGPLLCLK/2 is 48 MHz
+   91 00000000         ;SBR = 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+   92 00000000 00000038 
+                       UART0_BDL_9600
+                               EQU              0x38
+   93 00000000         ;---------------------------------------------------------------
+   94 00000000         ;UART0_C1
+   95 00000000         ;0-->7:LOOPS=loops select (normal)
+   96 00000000         ;0-->6:DOZEEN=doze enable (disabled)
+   97 00000000         ;0-->5:RSRC=receiver source select (internal--no effect LOOPS=0)
+   98 00000000         ;0-->4:M=9- or 8-bit mode select 
+   99 00000000         ;        (1 start, 8 data [lsb first], 1 stop)
+  100 00000000         ;0-->3:WAKE=receiver wakeup method select (idle)
+  101 00000000         ;0-->2:IDLE=idle line type select (idle begins after start bit)
+  102 00000000         ;0-->1:PE=parity enable (disabled)
+  103 00000000         ;0-->0:PT=parity type (even parity--no effect PE=0)
+  104 00000000 00000000 
+                       UART0_C1_8N1
+                               EQU              0x00
+  105 00000000         ;---------------------------------------------------------------
+  106 00000000         ;UART0_C2
+  107 00000000         ;0-->7:TIE=transmit IE for TDRE (disabled)
+  108 00000000         ;0-->6:TCIE=transmission complete IE for TC (disabled)
+  109 00000000         ;0-->5:RIE=receiver IE for RDRF (disabled)
+  110 00000000         ;0-->4:ILIE=idle line IE for IDLE (disabled)
+  111 00000000         ;1-->3:TE=transmitter enable (enabled)
+  112 00000000         ;1-->2:RE=receiver enable (enabled)
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  113 00000000         ;0-->1:RWU=receiver wakeup control (normal)
+  114 00000000         ;0-->0:SBK=send break (disabled, normal)
+  115 00000000 0000000C 
+                       UART0_C2_T_R
+                               EQU              (UART0_C2_TE_MASK :OR: UART0_C2_RE_MASK)
+  116 00000000 0000002C 
+                       UART0_C2_T_RI
+                               EQU              (UART0_C2_RIE_MASK :OR: UART0_C2_T_R)
+  117 00000000 000000AC 
+                       UART0_C2_TI_RI
+                               EQU              (UART0_C2_TIE_MASK :OR: UART0_C2_T_RI)
+  118 00000000         ;---------------------------------------------------------------
+  119 00000000         ;UART0_C3
+  120 00000000         ;0-->7:R8T9=9th data bit for receiver (not used M=0)
+  121 00000000         ;           10th data bit for transmitter (not used M10=0)
+  122 00000000         ;0-->6:R9T8=9th data bit for transmitter (not used M=0)
+  123 00000000         ;           10th data bit for receiver (not used M10=0)
+  124 00000000         ;0-->5:TXDIR=UART_TX pin direction in single-wire mode
+  125 00000000         ;            (no effect LOOPS=0)
+  126 00000000         ;0-->4:TXINV=transmit data inversion (not inverted)
+  127 00000000         ;0-->3:ORIE=overrun IE for OR (disabled)
+  128 00000000         ;0-->2:NEIE=noise error IE for NF (disabled)
+  129 00000000         ;0-->1:FEIE=framing error IE for FE (disabled)
+  130 00000000         ;0-->0:PEIE=parity error IE for PF (disabled)
+  131 00000000 00000000 
+                       UART0_C3_NO_TXINV
+                               EQU              0x00
+  132 00000000         ;---------------------------------------------------------------
+  133 00000000         ;UART0_C4
+  134 00000000         ;    0-->  7:MAEN1=match address mode enable 1 (disabled)
+  135 00000000         ;    0-->  6:MAEN2=match address mode enable 2 (disabled)
+  136 00000000         ;    0-->  5:M10=10-bit mode select (not selected)
+  137 00000000         ;01111-->4-0:OSR=over sampling ratio (16)
+  138 00000000         ;               = 1 + OSR for 3 <= OSR <= 31
+  139 00000000         ;               = 16 for 0 <= OSR <= 2 (invalid values)
+  140 00000000 0000000F 
+                       UART0_C4_OSR_16
+                               EQU              0x0F
+  141 00000000 0000000F 
+                       UART0_C4_NO_MATCH_OSR_16
+                               EQU              UART0_C4_OSR_16
+  142 00000000         ;---------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  143 00000000         ;UART0_C5
+  144 00000000         ;  0-->  7:TDMAE=transmitter DMA enable (disabled)
+  145 00000000         ;  0-->  6:Reserved; read-only; always 0
+  146 00000000         ;  0-->  5:RDMAE=receiver full DMA enable (disabled)
+  147 00000000         ;000-->4-2:Reserved; read-only; always 0
+  148 00000000         ;  0-->  1:BOTHEDGE=both edge sampling (rising edge only)
+  149 00000000         ;  0-->  0:RESYNCDIS=resynchronization disable (enabled)
+  150 00000000 00000000 
+                       UART0_C5_NO_DMA_SSR_SYNC
+                               EQU              0x00
+  151 00000000         ;---------------------------------------------------------------
+  152 00000000         ;UART0_S1
+  153 00000000         ;0-->7:TDRE=transmit data register empty flag; read-only
+  154 00000000         ;0-->6:TC=transmission complete flag; read-only
+  155 00000000         ;0-->5:RDRF=receive data register full flag; read-only
+  156 00000000         ;1-->4:IDLE=idle line flag; write 1 to clear (clear)
+  157 00000000         ;1-->3:OR=receiver overrun flag; write 1 to clear (clear)
+  158 00000000         ;1-->2:NF=noise flag; write 1 to clear (clear)
+  159 00000000         ;1-->1:FE=framing error flag; write 1 to clear (clear)
+  160 00000000         ;1-->0:PF=parity error flag; write 1 to clear (clear)
+  161 00000000 0000001F 
+                       UART0_S1_CLEAR_FLAGS
+                               EQU              0x1F
+  162 00000000         ;---------------------------------------------------------------
+  163 00000000         ;UART0_S2
+  164 00000000         ;1-->7:LBKDIF=LIN break detect interrupt flag (clear)
+  165 00000000         ;             write 1 to clear
+  166 00000000         ;1-->6:RXEDGIF=RxD pin active edge interrupt flag (clear)
+  167 00000000         ;              write 1 to clear
+  168 00000000         ;0-->5:(reserved); read-only; always 0
+  169 00000000         ;0-->4:RXINV=receive data inversion (disabled)
+  170 00000000         ;0-->3:RWUID=receive wake-up idle detect
+  171 00000000         ;0-->2:BRK13=break character generation length (10)
+  172 00000000         ;0-->1:LBKDE=LIN break detect enable (disabled)
+  173 00000000         ;0-->0:RAF=receiver active flag; read-only
+  174 00000000 000000C0 
+                       UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+                               EQU              0xC0
+  175 00000000         ;---------------------------------------------------------------
+  176 00000000         
+  177 00000000         
+  178 00000000         
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  179 00000000         
+  180 00000000         
+  181 00000000         
+  182 00000000         ;---------------------------------------------------------------
+  183 00000000         ;NVIC_ICPR
+  184 00000000         ;31-00:CLRPEND=pending status for HW IRQ sources;
+  185 00000000         ;             read:   0 = not pending;  1 = pending
+  186 00000000         ;             write:  0 = no effect;
+  187 00000000         ;                     1 = change status to not pending
+  188 00000000         ;22:PIT IRQ pending status
+  189 00000000         ;12:UART0 IRQ pending status
+  190 00000000 00400000 
+                       NVIC_ICPR_PIT_MASK
+                               EQU              PIT_IRQ_MASK
+  191 00000000         ;---------------------------------------------------------------
+  192 00000000         ;NVIC_IPR0-NVIC_IPR7
+  193 00000000         ;2-bit priority:  00 = highest; 11 = lowest
+  194 00000000         ;--PIT
+  195 00000000 00000000 
+                       PIT_IRQ_PRIORITY
+                               EQU              0
+  196 00000000 00C00000 
+                       NVIC_IPR_PIT_MASK
+                               EQU              (3 << PIT_PRI_POS)
+  197 00000000 00000000 
+                       NVIC_IPR_PIT_PRI_0
+                               EQU              (PIT_IRQ_PRIORITY << UART0_PRI_POS)
+  198 00000000         ;--UART0
+  199 00000000 00000003 
+                       UART0_IRQ_PRIORITY
+                               EQU              3
+  200 00000000 000000C0 
+                       NVIC_IPR_UART0_MASK
+                               EQU              (3 << UART0_PRI_POS)
+  201 00000000 000000C0 
+                       NVIC_IPR_UART0_PRI_3
+                               EQU              (UART0_IRQ_PRIORITY << UART0_PRI_POS)
+  202 00000000         ;---------------------------------------------------------------
+  203 00000000         ;NVIC_ISER
+  204 00000000         ;31-00:SETENA=masks for HW IRQ sources;
+  205 00000000         ;             read:   0 = masked;     1 = unmasked
+  206 00000000         ;             write:  0 = no effect;  1 = unmask
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  207 00000000         ;22:PIT IRQ mask
+  208 00000000         ;12:UART0 IRQ mask
+  209 00000000 00400000 
+                       NVIC_ISER_PIT_MASK
+                               EQU              PIT_IRQ_MASK
+  210 00000000 00001000 
+                       NVIC_ISER_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+  211 00000000         ;---------------------------------------------------------------
+  212 00000000         ;PIT_LDVALn:  PIT load value register n
+  213 00000000         ;31-00:TSV=timer start value (period in clock cycles - 1)
+  214 00000000         ;Clock ticks for 0.01 s at 24 MHz count rate
+  215 00000000         ;0.01 s * 24,000,000 Hz = 240,000
+  216 00000000         ;TSV = 240,000 - 1
+  217 00000000 0003A97F 
+                       PIT_LDVAL_10ms
+                               EQU              239999
+  218 00000000         ;---------------------------------------------------------------
+  219 00000000         ;PIT_MCR:  PIT module control register
+  220 00000000         ;1-->    0:FRZ=freeze (continue'/stop in debug mode)
+  221 00000000         ;0-->    1:MDIS=module disable (PIT section)
+  222 00000000         ;               RTI timer not affected
+  223 00000000         ;               must be enabled before any other PIT setup
+  224 00000000 00000001 
+                       PIT_MCR_EN_FRZ
+                               EQU              PIT_MCR_FRZ_MASK
+  225 00000000         ;---------------------------------------------------------------
+  226 00000000         ;PIT_TCTRLn:  PIT timer control register n
+  227 00000000         ;0-->   2:CHN=chain mode (enable)
+  228 00000000         ;1-->   1:TIE=timer interrupt enable
+  229 00000000         ;1-->   0:TEN=timer enable
+  230 00000000 00000003 
+                       PIT_TCTRL_CH_IE
+                               EQU              (PIT_TCTRL_TEN_MASK :OR: PIT_TCTRL_TIE_MASK)
+  231 00000000         ;---------------------------------------------------------------
+  232 00000000         ;Port D
+  233 00000000 00000100 
+                       PTD5_MUX_GPIO
+                               EQU              (1 << PORT_PCR_MUX_SHIFT)
+  235 00000000 01000100 
+                       SET_PTD5_GPIO
+                               EQU              (PORT_PCR_ISF_MASK :OR:  PTD5_MUX_GPIO)
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+  236 00000000         ;Port E
+  237 00000000 00000100 
+                       PTE29_MUX_GPIO
+                               EQU              (1 << PORT_PCR_MUX_SHIFT)
+  239 00000000 01000100 
+                       SET_PTE29_GPIO
+                               EQU              (PORT_PCR_ISF_MASK :OR:  PTE29_MUX_GPIO)
+  240 00000000 0000001D 
+                       POS_RED EQU              29
+  241 00000000 00000005 
+                       POS_GREEN
+                               EQU              5
+  242 00000000 20000000 
+                       LED_RED_MASK
+                               EQU              (1 << POS_RED)
+  243 00000000 00000020 
+                       LED_GREEN_MASK
+                               EQU              (1 << POS_GREEN)
+  244 00000000 00000020 
+                       LED_PORTD_MASK
+                               EQU              LED_GREEN_MASK
+  245 00000000 20000000 
+                       LED_PORTE_MASK
+                               EQU              LED_RED_MASK
+  246 00000000         
+  247 00000000         
+  248 00000000         
+  249 00000000 0000044C 
+                       One_Thousand_One_Hundred
+                               EQU              1100
+  250 00000000 00000064 
+                       One_Hundred
+                               EQU              100
+  251 00000000         
+  252 00000000         
+  253 00000000 0000000D 
+                       CR      EQU              0x0D
+  254 00000000 0000000A 
+                       LF      EQU              0x0A
+  255 00000000 0000000F 
+                       SPECIAL EQU              0x0F
+  256 00000000         
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  257 00000000 0000004F 
+                       MAX_STRING
+                               EQU              79
+  258 00000000         
+  259 00000000 000002F1 
+                       LargeNumber
+                               EQU              753
+  260 00000000         
+  261 00000000 00000000 
+                       IN_PTR  EQU              0
+  262 00000000 00000004 
+                       OUT_PTR EQU              4
+  263 00000000 00000008 
+                       BUF_STRT
+                               EQU              8
+  264 00000000 0000000C 
+                       BUF_PAST
+                               EQU              12
+  265 00000000 00000010 
+                       BUF_SIZE
+                               EQU              16
+  266 00000000 00000011 
+                       NUM_ENQD
+                               EQU              17
+  267 00000000         
+  268 00000000         
+  269 00000000 00000004 
+                       Q_BUF_SZ
+                               EQU              4
+  270 00000000 00000050 
+                       TRxQ_BUF_SZ
+                               EQU              80
+  271 00000000 00000012 
+                       Q_REC_SZ
+                               EQU              18
+  272 00000000         
+  273 00000000         
+  274 00000000         ;****************************************************************
+  275 00000000         ;Program
+  276 00000000         ;Linker requires Reset_Handler
+  277 00000000                 AREA             MyCode,CODE,READONLY
+  278 00000000                 ENTRY
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+  279 00000000                 EXPORT           Reset_Handler
+  280 00000000                 IMPORT           Startup
+  281 00000000         Reset_Handler
+  282 00000000         main
+  283 00000000         ;---------------------------------------------------------------
+  284 00000000         ;Mask interrupts
+  285 00000000 B672    0       CPSID            I
+  286 00000002         ;KL46 system startup with 48-MHz system clock
+  287 00000002 F7FF FFFE       BL               Startup
+  288 00000006         ;---------------------------------------------------------------
+  289 00000006         ;---------------------- HEADER -------------------------
+  290 00000006         ;Program creates a Queue and has EnQueue and Dequeue functonality
+  291 00000006         ;as well as being able to display help and status tables
+  292 00000006         ;
+  293 00000006         ;these subroutines include but are not limited to
+  294 00000006         ;----------InitQueue
+  295 00000006         ;----------Enqueue
+  296 00000006         ;----------Dequeue
+  297 00000006         ;----------PutNumHex
+  298 00000006         ;----------GetStringSB
+  299 00000006         ;----------PutStringSB
+  300 00000006         ;----------PutNumU
+  301 00000006         ;----------PutChar
+  302 00000006         ;----------GetChar
+  303 00000006         
+  304 00000006         
+  305 00000006         ;-----**NEW**----
+  306 00000006         ;----------UART0_ISR
+  307 00000006         ;----------Init_UART_IRQ
+  308 00000006         ;----------PutNumSB
+  309 00000006         ;
+  310 00000006         ;the program also used a number of other subroutines that allowed it
+  311 00000006         ;to read in the input of the useer
+  312 00000006         
+  313 00000006         
+  314 00000006         ;>>>>> begin main program code <<<<< 
+  315 00000006         ;-------------------------------------------------------------
+  316 00000006         ;UART Initilization and LEd intiilzation
+  317 00000006 F000 FBEC       BL               Init_UART0_IRQ
+  318 0000000A F000 FAAB       BL               LED_INIT
+  319 0000000E         START
+  320 0000000E         ;-------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+  321 0000000E         ;Stop Watch Initilization
+  322 0000000E 48A4            LDR              R0,=RunStopWatch
+  323 00000010 2100            MOVS             R1,#0
+  324 00000012 7001            STRB             R1,[R0,#0]
+  325 00000014         
+  326 00000014 48A3            LDR              R0,=Count
+  327 00000016 2100            MOVS             R1,#0
+  328 00000018 6001            STR              R1,[R0,#0]
+  329 0000001A 2600            MOVS             R6,#0
+  330 0000001C         
+  331 0000001C         ;------------------------------------------------------------- 
+  332 0000001C         ;random number initialization
+  333 0000001C 48A2            LDR              R0,=Random
+  334 0000001E 2100            MOVS             R1,#0
+  335 00000020 6001            STR              R1,[R0,#0]
+  336 00000022         
+  337 00000022         ;-------------------------------------------------------------  
+  338 00000022         ;round number intitlization
+  339 00000022 48A2            LDR              R0,=Round_Number
+  340 00000024 2101            MOVS             R1,#1
+  341 00000026 6001            STR              R1,[R0,#0]
+  342 00000028         
+  343 00000028         ;------------------------------------------------------------- 
+  344 00000028         ;scroe itnitialization
+  345 00000028 48A1            LDR              R0,=Score   ;initializing score with 0
+  346 0000002A 2100            MOVS             R1,#0
+  347 0000002C 7001            STRB             R1,[R0,#0]
+  348 0000002E         
+  349 0000002E         ;------------------------------------------------------------- 
+  350 0000002E         ;initialzing time requirment
+  351 0000002E 48A1            LDR              R0,=Time_Requirment
+  352 00000030 49A1            LDR              R1,=One_Thousand_One_Hundred
+  353 00000032 6001            STR              R1,[R0,#0]
+  354 00000034         
+  355 00000034         ;------------------------------------------------------------- 
+  356 00000034         ;printing out initial stamtnets
+  357 00000034 214F            MOVS             R1,#MAX_STRING
+  358 00000036 48A1            LDR              R0,=InitString1
+  359 00000038 F000 FB85       BL               PutStringSB
+  360 0000003C         
+  361 0000003C 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  362 0000003E F000 FC37       BL               PutChar
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+  363 00000042 200A            MOVS             R0,#LF
+  364 00000044 F000 FC34       BL               PutChar
+  365 00000048         
+  366 00000048 489D            LDR              R0,=InitString2
+  367 0000004A F000 FB7C       BL               PutStringSB
+  368 0000004E         
+  369 0000004E 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  370 00000050 F000 FC2E       BL               PutChar
+  371 00000054 200A            MOVS             R0,#LF
+  372 00000056 F000 FC2B       BL               PutChar
+  373 0000005A         
+  374 0000005A 489A            LDR              R0,=THEGAME1
+  375 0000005C F000 FB73       BL               PutStringSB
+  376 00000060 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  377 00000062 F000 FC25       BL               PutChar
+  378 00000066 200A            MOVS             R0,#LF
+  379 00000068 F000 FC22       BL               PutChar
+  380 0000006C 4896            LDR              R0,=THEGAME2
+  381 0000006E F000 FB6A       BL               PutStringSB
+  382 00000072 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  383 00000074 F000 FC1C       BL               PutChar
+  384 00000078 200A            MOVS             R0,#LF
+  385 0000007A F000 FC19       BL               PutChar
+  386 0000007E 4893            LDR              R0,=THEGAME3
+  387 00000080 F000 FB61       BL               PutStringSB
+  388 00000084 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  389 00000086 F000 FC13       BL               PutChar
+  390 0000008A 200A            MOVS             R0,#LF
+  391 0000008C F000 FC10       BL               PutChar
+  392 00000090 488F            LDR              R0,=THEGAME4
+  393 00000092 F000 FB58       BL               PutStringSB
+  394 00000096 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  395 00000098 F000 FC0A       BL               PutChar
+  396 0000009C 200A            MOVS             R0,#LF
+  397 0000009E F000 FC07       BL               PutChar
+  398 000000A2 488C            LDR              R0,=THEGAME5
+  399 000000A4 F000 FB4F       BL               PutStringSB
+  400 000000A8 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  401 000000AA F000 FC01       BL               PutChar
+  402 000000AE 200A            MOVS             R0,#LF
+  403 000000B0 F000 FBFE       BL               PutChar
+  404 000000B4 4888            LDR              R0,=THEGAME6
+
+
+
+ARM Macro Assembler    Page 13 
+
+
+  405 000000B6 F000 FB46       BL               PutStringSB
+  406 000000BA 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  407 000000BC F000 FBF8       BL               PutChar
+  408 000000C0 200A            MOVS             R0,#LF
+  409 000000C2 F000 FBF5       BL               PutChar
+  410 000000C6         
+  411 000000C6         ;-------------------------------------------------------------  
+  412 000000C6         ;waiting fro user input
+  413 000000C6 F000 FBFE       BL               GetChar
+  414 000000CA         
+  415 000000CA 4884            LDR              R0,=GO
+  416 000000CC F000 FB3B       BL               PutStringSB
+  417 000000D0         
+  418 000000D0 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  419 000000D2 F000 FBED       BL               PutChar
+  420 000000D6 200A            MOVS             R0,#LF
+  421 000000D8 F000 FBEA       BL               PutChar
+  422 000000DC         
+  423 000000DC         User_Has_Inputed
+  424 000000DC         
+  425 000000DC         ;------------------------------------------------------------- 
+  426 000000DC         ;begin
+  427 000000DC F000 FB5F       BL               Init_PIT_IRQ
+  428 000000E0 B662            CPSIE            I
+  429 000000E2         
+  430 000000E2         ;-------------------------------------------------------------    
+  431 000000E2         Loop                                 ;infinite loop 
+  432 000000E2         
+  433 000000E2 4872            LDR              R0,=Round_Number ;printing round number
+  434 000000E4 7801            LDRB             R1,[R0,#0]
+  435 000000E6         
+  436 000000E6 290B            CMP              R1,#11      ;if 10 then we done
+  437 000000E8 D045            BEQ              ALLDONE1
+  438 000000EA         
+  439 000000EA F000 F9BD       BL               RandomLED   ;getting random LED number putting it in LED_Color
+  440 000000EE         
+  441 000000EE         ;------------------------------------------------------------- 
+  442 000000EE         ;printing out the round number
+  443 000000EE 214F            MOVS             R1,#MAX_STRING
+  444 000000F0 487B            LDR              R0,=LoopString ;loading the loop string "round"
+  445 000000F2 F000 FB28       BL               PutStringSB
+  446 000000F6         
+
+
+
+ARM Macro Assembler    Page 14 
+
+
+  447 000000F6 486D            LDR              R0,=Round_Number ;printing round number
+  448 000000F8 7801            LDRB             R1,[R0,#0]
+  449 000000FA         
+  450 000000FA 2909            CMP              R1,#9
+  451 000000FC D906            BLS              BelowNine   ;branching if above nine because special case
+  452 000000FE 2031            MOVS             R0,#49
+  453 00000100 F000 FBD6       BL               PutChar
+  454 00000104 2030            MOVS             R0,#48
+  455 00000106 F000 FBD3       BL               PutChar
+  456 0000010A E006            B                AboveNine   ;skipping over old
+  457 0000010C         BelowNine
+  458 0000010C 2030            MOVS             R0,#'0'
+  459 0000010E F000 FBCF       BL               PutChar
+  460 00000112 3130            ADDS             R1,R1,#48
+  461 00000114 0008            MOVS             R0,R1
+  462 00000116 F000 FBCB       BL               PutChar
+  463 0000011A         AboveNine
+  464 0000011A 290B            CMP              R1,#11      ;if 10 then we done
+  465 0000011C D02B            BEQ              ALLDONE1
+  466 0000011E         
+  467 0000011E 4863            LDR              R0,=Round_Number ;printing round number  
+  468 00000120 7801            LDRB             R1,[R0,#0]  ;checking if wrong number or round redo
+  469 00000122 4870            LDR              R0,=Round_Number_Prev ;printing round number
+  470 00000124 7802            LDRB             R2,[R0,#0]
+  471 00000126         
+  472 00000126 4291            CMP              R1,R2
+  473 00000128 D002            BEQ              SuperSkip   ;skips if the round number same as last 
+  474 0000012A         
+  475 0000012A         
+  476 0000012A 485E            LDR              R0,=Count   ;reseting the timer count value
+  477 0000012C 2100            MOVS             R1,#0
+  478 0000012E 6001            STR              R1,[R0,#0]
+  479 00000130         
+  480 00000130         SuperSkip
+  481 00000130         
+  482 00000130 203E            MOVS             R0,#'>'     ;printing a '>'
+  483 00000132 F000 FBBD       BL               PutChar
+  484 00000136         
+  485 00000136 485A            LDR              R0,=RunStopWatch ;starting the stop watch
+  486 00000138 2101            MOVS             R1,#1
+  487 0000013A 7001            STRB             R1,[R0,#0]
+  488 0000013C         
+
+
+
+ARM Macro Assembler    Page 15 
+
+
+  489 0000013C         ;------------------------------------------------------------- 
+  490 0000013C 2600            MOVS             R6,#0       ;initialzing R6 which is used by PIT_ISR
+  491 0000013E         Loop_Wait                            ;the loop that waits for the user to input a value
+  492 0000013E 2E02            CMP              R6,#2
+  493 00000140 D002            BEQ              TIME_EXPIRED
+  494 00000142 2E01            CMP              R6,#1       ;R6, will be modified by PIT_ISR
+  495 00000144 D1FB            BNE              Loop_Wait   ;PIT_ISR will also return user inptu through R7
+  496 00000146         
+  497 00000146 E018            B                Skip_Time
+  498 00000148         
+  499 00000148         TIME_EXPIRED
+  500 00000148 2078            MOVS             R0,#'x'
+  501 0000014A F000 FBB1       BL               PutChar
+  502 0000014E 203A            MOVS             R0,#':'
+  503 00000150 F000 FBAE       BL               PutChar
+  504 00000154         
+  505 00000154 214F            MOVS             R1,#MAX_STRING
+  506 00000156 4864            LDR              R0,=OutOfTime ;printing "out of time, color was: "
+  507 00000158 F000 FAF5       BL               PutStringSB
+  508 0000015C         
+  509 0000015C F000 F9E6       BL               PrintColor  ;printing the name of the color
+  510 00000160         
+  511 00000160 F000 F8F0       BL               EndofRoundCalc
+  512 00000164 F000 F907       BL               ScoreCalc
+  513 00000168 200D            MOVS             R0,#CR      ;New Line
+  514 0000016A F000 FBA1       BL               PutChar
+  515 0000016E 200A            MOVS             R0,#LF
+  516 00000170 F000 FB9E       BL               PutChar
+  517 00000174         
+  518 00000174 E7B5            B                Loop        ;going back to round   
+  519 00000176         ALLDONE1
+  520 00000176 E050            B                ALLDONE     ;done because too long
+  521 00000178         START1
+  522 00000178 E749            B                START
+  523 0000017A         
+  524 0000017A         Skip_Time
+  525 0000017A         
+  526 0000017A         ;after this point, the program has recived user input
+  527 0000017A 0038            MOVS             R0,R7       ; moving user input into R0, value still in R7 tho
+  528 0000017C F000 FB98       BL               PutChar
+  529 00000180         
+  530 00000180         ;converting the user input into a value 0-3
+
+
+
+ARM Macro Assembler    Page 16 
+
+
+  531 00000180 2867            CMP              R0,#'g'
+  532 00000182 D00A            BEQ              Green
+  533 00000184 2872            CMP              R0,#'r'
+  534 00000186 D00C            BEQ              Red
+  535 00000188 2862            CMP              R0,#'b'
+  536 0000018A D00E            BEQ              Both
+  537 0000018C 286E            CMP              R0,#'n'
+  538 0000018E D000            BEQ              None
+  539 00000190 E00F            B                BitchMessedUp
+  540 00000192         ;------------------------------------------------------------- 
+  541 00000192         ;reqirments for the LED choice
+  542 00000192         ;   none = 0 
+  543 00000192         ;   green = 1
+  544 00000192         ;   red = 2
+  545 00000192         ;    both = 3
+  546 00000192         None
+  547 00000192 2100            MOVS             R1,#0
+  548 00000194 4855            LDR              R0,=LED_Choice
+  549 00000196 7001            STRB             R1,[R0,#0]
+  550 00000198 E00F            B                Done_Color
+  551 0000019A         Green
+  552 0000019A 2101            MOVS             R1,#1
+  553 0000019C 4853            LDR              R0,=LED_Choice
+  554 0000019E 7001            STRB             R1,[R0,#0]
+  555 000001A0 E00B            B                Done_Color
+  556 000001A2         Red
+  557 000001A2 2102            MOVS             R1,#2
+  558 000001A4 4851            LDR              R0,=LED_Choice
+  559 000001A6 7001            STRB             R1,[R0,#0]
+  560 000001A8 E007            B                Done_Color
+  561 000001AA         Both
+  562 000001AA 2103            MOVS             R1,#3
+  563 000001AC 484F            LDR              R0,=LED_Choice
+  564 000001AE 7001            STRB             R1,[R0,#0]
+  565 000001B0 E003            B                Done_Color
+  566 000001B2         
+  567 000001B2         BitchMessedUp
+  568 000001B2 2105            MOVS             R1,#5
+  569 000001B4 484D            LDR              R0,=LED_Choice
+  570 000001B6 7001            STRB             R1,[R0,#0]
+  571 000001B8 E7FF            B                Done_Color
+  572 000001BA         
+
+
+
+ARM Macro Assembler    Page 17 
+
+
+  573 000001BA         
+  574 000001BA         Done_Color
+  575 000001BA         ;------------------------------------------------------------- 
+  576 000001BA         ;R7 now has the user inputed value 
+  577 000001BA         ;printing the value and amount of time it took for user to input a number 
+  578 000001BA         
+  579 000001BA         ;getting the color of the LED and comparing it with the inputed value
+  580 000001BA 484D            LDR              R0,=LED_Color
+  581 000001BC 7801            LDRB             R1,[R0,#0]
+  582 000001BE         
+  583 000001BE 484B            LDR              R0,=LED_Choice
+  584 000001C0 7807            LDRB             R7,[R0,#0]
+  585 000001C2         
+  586 000001C2 428F            CMP              R7,R1       ;checking if the two are equal
+  587 000001C4 D014            BEQ              Correct
+  588 000001C6         
+  589 000001C6         ;-------------------------------------------------------------
+  590 000001C6         ;if at this point, then they were the wrong color
+  591 000001C6         Incorrect
+  592 000001C6 203A            MOVS             R0,#':'
+  593 000001C8 F000 FB72       BL               PutChar
+  594 000001CC         
+  595 000001CC 214F            MOVS             R1,#MAX_STRING
+  596 000001CE 4849            LDR              R0,=Wrong   ;printing that you were wrong
+  597 000001D0 F000 FAB9       BL               PutStringSB
+  598 000001D4         
+  599 000001D4 2001            MOVS             R0,#1
+  600 000001D6 F000 F8CE       BL               ScoreCalc
+  601 000001DA         
+  602 000001DA 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  603 000001DC F000 FB68       BL               PutChar
+  604 000001E0 200A            MOVS             R0,#LF
+  605 000001E2 F000 FB65       BL               PutChar
+  606 000001E6 4831            LDR              R0,=Round_Number ;printing round number
+  607 000001E8 7802            LDRB             R2,[R0,#0]
+  608 000001EA         
+  609 000001EA 483E            LDR              R0,=Round_Number_Prev ;printing round number
+  610 000001EC 7002            STRB             R2,[R0,#0]
+  611 000001EE         
+  612 000001EE E778            B                Loop
+  613 000001F0         
+  614 000001F0         Correct
+
+
+
+ARM Macro Assembler    Page 18 
+
+
+  615 000001F0         ;up to this point, the user color input and the color match, and since the time has not expired,
+  616 000001F0 203A            MOVS             R0,#':'
+  617 000001F2 F000 FB5D       BL               PutChar
+  618 000001F6         
+  619 000001F6 214F            MOVS             R1,#MAX_STRING
+  620 000001F8 483F            LDR              R0,=CorrectColor ;printing "correct--color was: "
+  621 000001FA F000 FAA4       BL               PutStringSB
+  622 000001FE         
+  623 000001FE F000 F995       BL               PrintColor
+  624 00000202         
+  625 00000202 F000 F89F       BL               EndofRoundCalc
+  626 00000206         
+  627 00000206 2000            MOVS             R0,#0
+  628 00000208 F000 F8B5       BL               ScoreCalc
+  629 0000020C         
+  630 0000020C 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  631 0000020E F000 FB4F       BL               PutChar
+  632 00000212 200A            MOVS             R0,#LF
+  633 00000214 F000 FB4C       BL               PutChar
+  634 00000218         
+  635 00000218 E763            B                Loop
+  636 0000021A         
+  637 0000021A         ;if at this point, then the game has finished
+  638 0000021A         ALLDONE
+  639 0000021A 214F            MOVS             R1,#MAX_STRING
+  640 0000021C 4837            LDR              R0,=Congradulations ;printing "congradulations!"
+  641 0000021E F000 FA92       BL               PutStringSB
+  642 00000222         
+  643 00000222 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  644 00000224 F000 FB44       BL               PutChar
+  645 00000228 200A            MOVS             R0,#LF
+  646 0000022A F000 FB41       BL               PutChar
+  647 0000022E         
+  648 0000022E 214F            MOVS             R1,#MAX_STRING
+  649 00000230 4833            LDR              R0,=FinishedWith ;printing "you finished with: "
+  650 00000232 F000 FA88       BL               PutStringSB
+  651 00000236         
+  652 00000236 481E            LDR              R0,=Score
+  653 00000238 6800            LDR              R0,[R0,#0]  ;loading value of score
+  654 0000023A F000 FA70       BL               PutNumU
+  655 0000023E         
+  656 0000023E 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+
+
+
+ARM Macro Assembler    Page 19 
+
+
+  657 00000240 F000 FB36       BL               PutChar
+  658 00000244 200A            MOVS             R0,#LF
+  659 00000246 F000 FB33       BL               PutChar
+  660 0000024A         
+  661 0000024A 214F            MOVS             R1,#MAX_STRING ;"play again? [y/n]"
+  662 0000024C 482D            LDR              R0,=PlayAgain
+  663 0000024E F000 FA7A       BL               PutStringSB
+  664 00000252         
+  665 00000252 F000 FB38       BL               GetChar
+  666 00000256 2879            CMP              R0,#'y'     ;if the user enters 'y; then restart
+  667 00000258 D01A            BEQ              START2
+  668 0000025A         
+  669 0000025A 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  670 0000025C F000 FB28       BL               PutChar
+  671 00000260 200A            MOVS             R0,#LF
+  672 00000262 F000 FB25       BL               PutChar
+  673 00000266         
+  674 00000266 214F            MOVS             R1,#MAX_STRING
+  675 00000268 4827            LDR              R0,=Quiting
+  676 0000026A F000 FA6C       BL               PutStringSB
+  677 0000026E         
+  678 0000026E 480D            LDR              R0,=Count
+  679 00000270 2100            MOVS             R1,#0
+  680 00000272 6001            STR              R1,[R0,#0]
+  681 00000274 2600            MOVS             R6,#0
+  682 00000276         
+  683 00000276 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  684 00000278 F000 FB1A       BL               PutChar
+  685 0000027C 200A            MOVS             R0,#LF
+  686 0000027E F000 FB17       BL               PutChar
+  687 00000282 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  688 00000284 F000 FB14       BL               PutChar
+  689 00000288 200A            MOVS             R0,#LF
+  690 0000028A F000 FB11       BL               PutChar
+  691 0000028E         
+  692 0000028E E7FE            B                .
+  693 00000290         
+  694 00000290         ;----------------------------------------------
+  695 00000290         ;used if want to restart
+  696 00000290         START2
+  697 00000290 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  698 00000292 F000 FB0D       BL               PutChar
+
+
+
+ARM Macro Assembler    Page 20 
+
+
+  699 00000296 200A            MOVS             R0,#LF
+  700 00000298 F000 FB0A       BL               PutChar
+  701 0000029C         
+  702 0000029C E76C            B                START1
+  703 0000029E         
+  704 0000029E 00 00           ALIGN
+  705 000002A0 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              0000044C 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+
+
+
+ARM Macro Assembler    Page 21 
+
+
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         LTORG
+  706 00000344         
+  707 00000344         
+  708 00000344         ;>>>>> begin subroutine code <<<<<
+  709 00000344         ;Inputs  Time_Requirment varibale and Score varibale
+  710 00000344         ;Outputs modifies score variable
+  711 00000344         ;Description
+  712 00000344         EndofRoundCalc
+  713 00000344 B57F            PUSH             {R0-R6,LR}
+  714 00000346 4822            LDR              R0,=Time_Requirment ;Loading Time Requirment
+  715 00000348 6801            LDR              R1,[R0,#0]
+  716 0000034A         
+  717 0000034A 4A22            LDR              R2,=One_Hundred
+  718 0000034C         
+  719 0000034C 428A            CMP              R2,R1       ;Checkign time requirment and the time decrementor
+  720 0000034E D005            BEQ              NoMoreRounds ;if they are the same, then have reached maximum number of 
+                                                            rounds
+  721 00000350         ;-------------------------------------------------------------
+  722 00000350         ;decrementing the new amonunt of time and the new round number
+  723 00000350 1A89            SUBS             R1,R1,R2    ;decrements Time Reqirment
+  724 00000352 6001            STR              R1,[R0,#0]
+  725 00000354         
+  726 00000354 4820            LDR              R0,=Round_Number ;loads round number
+  727 00000356 7801            LDRB             R1,[R0,#0]
+  728 00000358 1C49            ADDS             R1,R1,#1    ;intecrementing Round Number
+  729 0000035A 7001            STRB             R1,[R0,#0]
+  730 0000035C         
+  731 0000035C         NoMoreRounds
+  732 0000035C         ;-------------------------------------------------------------      ;calculating score
+  733 0000035C         ;printing the goods
+  734 0000035C 214F            MOVS             R1,#MAX_STRING
+  735 0000035E 481F            LDR              R0,=Entered ;printing ("time of")
+  736 00000360 F000 F9F1       BL               PutStringSB
+  737 00000364         
+  738 00000364 481E            LDR              R0,=Count
+  739 00000366 6800            LDR              R0,[R0,#0]
+  740 00000368 F000 F9D9       BL               PutNumU
+  741 0000036C         
+
+
+
+ARM Macro Assembler    Page 22 
+
+
+  742 0000036C 481D            LDR              R0,=TimeUnit ;printing ("ms" for the seconds units)
+  743 0000036E 214F            MOVS             R1,#MAX_STRING
+  744 00000370 F000 F9E9       BL               PutStringSB
+  745 00000374         
+  746 00000374         
+  747 00000374 BD7F            POP{R0-R6,PC}
+  748 00000376         ;------------------------------------------------------------
+  749 00000376         ;takes in R0
+  750 00000376         ;if R0 = 1 then subtracts 200 from score
+  751 00000376         ;if R0 = 0 then adds to the score
+  752 00000376         ;changes the score variable in memory
+  753 00000376         ScoreCalc
+  754 00000376 B53E            PUSH             {R1-R5,LR}
+  755 00000378         
+  756 00000378 4919            LDR              R1,=Count   ;loading time
+  757 0000037A 6809            LDR              R1,[R1,#0]
+  758 0000037C         
+  759 0000037C 4A16            LDR              R2,=Round_Number ;loading round number
+  760 0000037E 6812            LDR              R2,[R2,#0]
+  761 00000380         
+  762 00000380 4B14            LDR              R3,=One_Hundred
+  763 00000382         
+  764 00000382 2801            CMP              R0,#1       ;if 1 then subtract
+  765 00000384 D00F            BEQ              SubtractMotherFucker
+  766 00000386         
+  767 00000386 435A            MULS             R2,R3,R2    ;round number = round number * 100
+  768 00000388 435A            MULS             R2,R3,R2    ;round number = round number * 100 
+  769 0000038A         
+  770 0000038A 0008            MOVS             R0,R1       ;Divisor = Count
+  771 0000038C 0011            MOVS             R1,R2       ;Dividen = Round
+  772 0000038E F000 F9E7       BL               DIVU        ;round/time
+  773 00000392         
+  774 00000392 0001            MOVS             R1,R0
+  775 00000394 2003            MOVS             R0,#3
+  776 00000396 F000 F9E3       BL               DIVU
+  777 0000039A         
+  778 0000039A 0001            MOVS             R1,R0
+  779 0000039C         
+  780 0000039C 4812            LDR              R0,=Score
+  781 0000039E 6802            LDR              R2,[R0,#0]  ;loading value of score
+  782 000003A0 1852            ADDS             R2,R2,R1    ;Score = Score + (round/time)*100
+  783 000003A2 6002            STR              R2,[R0,#0]  ;storing value back
+
+
+
+ARM Macro Assembler    Page 23 
+
+
+  784 000003A4         
+  785 000003A4 E009            B                DoneSub
+  786 000003A6         
+  787 000003A6         ;------------------------------------------------------------
+  788 000003A6         SubtractMotherFucker
+  789 000003A6 22C8            MOVS             R2,#200     ;subtracts by 200 if wrong
+  790 000003A8         
+  791 000003A8 480F            LDR              R0,=Score
+  792 000003AA 6803            LDR              R3,[R0,#0]  ;loading value of score
+  793 000003AC         
+  794 000003AC 4293            CMP              R3,R2       ;if Score < subtracting then special
+  795 000003AE D302            BLO              LowerSub
+  796 000003B0 1A9B            SUBS             R3,R3,R2
+  797 000003B2 6003            STR              R3,[R0,#0]
+  798 000003B4         
+  799 000003B4 E001            B                DoneSub
+  800 000003B6         
+  801 000003B6         LowerSub
+  802 000003B6 2200            MOVS             R2,#0
+  803 000003B8 6002            STR              R2,[R0,#0]
+  804 000003BA         
+  805 000003BA         ;------------------------------------------------------------
+  806 000003BA         DoneSub
+  807 000003BA 214F            MOVS             R1,#MAX_STRING
+  808 000003BC 480B            LDR              R0,=ScoreIs ;printing "score is: "
+  809 000003BE F000 F9C2       BL               PutStringSB
+  810 000003C2         
+  811 000003C2 4809            LDR              R0,=Score
+  812 000003C4 6802            LDR              R2,[R0,#0]  ;loading value of score
+  813 000003C6         
+  814 000003C6 0010            MOVS             R0,R2       ;printing score
+  815 000003C8 F000 F9A9       BL               PutNumU
+  816 000003CC         
+  817 000003CC         ;------------------------------------------------------------
+  818 000003CC BD3E            POP              {R1-R5,PC}
+  819 000003CE         
+  820 000003CE 00 00           ALIGN
+  821 000003D0 00000000 
+              00000064 
+              00000000 
+              00000000 
+              00000000 
+
+
+
+ARM Macro Assembler    Page 24 
+
+
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         LTORG
+  822 00000400         ;-----------------------------------PIT-ISR---------------------------------
+  823 00000400         ;the interrupt handler that is called by the vector table
+  824 00000400         ;Address for RxQueue
+  825 00000400         ;returns the entered value in R7
+  826 00000400         ;if there has been sucessful input, R6 will be 1
+  827 00000400         PIT_ISR
+  828 00000400 B53F            PUSH             {R0-R5,LR}
+  829 00000402 4811            LDR              R0,=RunStopWatch
+  830 00000404 7801            LDRB             R1,[R0,#0]
+  831 00000406         
+  832 00000406         IF_PIT
+  833 00000406 2900            CMP              R1,#0
+  834 00000408 D00B            BEQ              Done_PIT
+  835 0000040A         
+  836 0000040A         ;need to get RXQueue
+  837 0000040A         ;if num enqued = 1 then somethign has been psuhed
+  838 0000040A         ;if so, stop the stop watch, call get char
+  839 0000040A         
+  840 0000040A 4D10            LDR              R5,=RxQRecord
+  841 0000040C 7C6E            LDRB             R6,[R5,#NUM_ENQD] ;getting number enqued of the goods
+  842 0000040E 2E01            CMP              R6,#1
+  843 00000410 DA0B            BGE              PIT_ENQ     ;branching if there is someting in the queue
+  844 00000412         
+  845 00000412         
+  846 00000412 480F            LDR              R0,=Count
+  847 00000414 6802            LDR              R2,[R0,#0]
+  848 00000416         
+  849 00000416         
+  850 00000416 490F            LDR              R1,=Time_Requirment ;loading the amount of time each round can take
+  851 00000418 680B            LDR              R3,[R1,#0]
+  852 0000041A         
+  853 0000041A 4293            CMP              R3,R2       ;checking if there is enough round time 
+  854 0000041C D00D            BEQ              TimeExp
+  855 0000041E         
+  856 0000041E 1C52            ADDS             R2,R2,#1
+
+
+
+ARM Macro Assembler    Page 25 
+
+
+  857 00000420 6002            STR              R2,[R0,#0]
+  858 00000422         
+  859 00000422         Done_PIT
+  860 00000422         ;Clearing interrupt
+  861 00000422 480D            LDR              R0,=PIT_CH0_BASE
+  862 00000424 490D            LDR              R1,=PIT_TFLG_TIF_MASK
+  863 00000426 60C1            STR              R1,[R0,#PIT_TFLG_OFFSET]
+  864 00000428         
+  865 00000428 BD3F            POP              {R0-R5,PC}
+  866 0000042A         
+  867 0000042A         PIT_ENQ
+  868 0000042A 4A07            LDR              R2,=RunStopWatch ;stopping the stop watch
+  869 0000042C 2100            MOVS             R1,#0
+  870 0000042E 7011            STRB             R1,[R2,#0]
+  871 00000430 F000 FA49       BL               GetChar
+  872 00000434 0007            MOVS             R7,R0
+  873 00000436 2601            MOVS             R6,#1
+  874 00000438         
+  875 00000438 E7F3            B                Done_PIT    ;finishing up
+  876 0000043A         
+  877 0000043A         
+  878 0000043A         TimeExp
+  879 0000043A         ;print out if time experied
+  880 0000043A         ;here have the restart and goods,
+  881 0000043A         ;now will just go back to beggining
+  882 0000043A 4A03            LDR              R2,=RunStopWatch ;stopping the stop watch
+  883 0000043C 2100            MOVS             R1,#0
+  884 0000043E 7011            STRB             R1,[R2,#0]
+  885 00000440         
+  886 00000440 2602            MOVS             R6,#2       ;R6 gets 2 if failure
+  887 00000442         
+  888 00000442 E7EE            B                Done_PIT    ;finishing up
+  889 00000444         
+  890 00000444 BD3F            POP              {R0-R5,PC}
+  891 00000446         
+  892 00000446 00 00           ALIGN
+  893 00000448 00000000 
+              00000000 
+              00000000 
+              00000000 
+              40037100 
+              00000001 
+
+
+
+ARM Macro Assembler    Page 26 
+
+
+              00000000 
+              00000000         LTORG
+  894 00000468         
+  895 00000468         ;--------------------------------RandomLED--------------------
+  896 00000468         RandomLED
+  897 00000468         ;selects random number 0 - 3
+  898 00000468         ;returns changes the variable LED_Color
+  899 00000468         ;none is 0
+  900 00000468         ;green is 1
+  901 00000468         ;red is 2
+  902 00000468         ;both is 3
+  903 00000468 B53E            PUSH             {R1-R5,LR}
+  904 0000046A         
+  905 0000046A 4827            LDR              R0,=Random
+  906 0000046C 6801            LDR              R1,[R0,#0]
+  907 0000046E 000F            MOVS             R7,R1
+  908 00000470         
+  909 00000470 1DC9            ADDS             R1,R1,#7    ;(seed + 7)
+  910 00000472         
+  911 00000472 2222            MOVS             R2,#34      ;(seed + 7)*34
+  912 00000474 4351            MULS             R1,R2,R1
+  913 00000476         
+  914 00000476 2005            MOVS             R0,#5
+  915 00000478 F000 F972       BL               DIVU        ;((seed + 7)*34)/5
+  916 0000047C         
+  917 0000047C 4A23            LDR              R2,=LargeNumber ;(((seed + 7)*34)/5)*753
+  918 0000047E 4350            MULS             R0,R2,R0
+  919 00000480         
+  920 00000480 300D            ADDS             R0,R0,#13   ;(((seed + 7)*34)/5)*753)+13
+  921 00000482         
+  922 00000482 0880            LSRS             R0,R0,#2    ;((((seed + 7)*34)/5)+13)*753)>>2
+  923 00000484 0002            MOVS             R2,R0
+  924 00000486         
+  925 00000486 210F            MOVS             R1,#0x0000000F ;((((((seed + 7)*34)/5)+13)>>2) EORS 0x00f0F0F) AND 0x000
+                                                            0000F
+  926 00000488 400B            ANDS             R3,R1
+  927 0000048A 21F0            MOVS             R1,#0x000000F0 ;((((((seed + 7)*34)/5)+13)>>2) EORS 0x00f0F0F) AND 0x000
+                                                            0000F
+  928 0000048C 400A            ANDS             R2,R1
+  929 0000048E 084A            LSRS             R2,R1,#1
+  930 00000490 18D3            ADDS             R3,R2,R3
+  931 00000492         
+
+
+
+ARM Macro Assembler    Page 27 
+
+
+  932 00000492 0019            MOVS             R1,R3
+  933 00000494 2002            MOVS             R0,#2
+  934 00000496         
+  935 00000496 F000 F963       BL               DIVU        ;taking all and dividing by 4
+  936 0000049A 0001            MOVS             R1,R0
+  937 0000049C         
+  938 0000049C 210F            MOVS             R1,#0x0000000F ;((((((seed + 7)*34)/5)+13)>>2) EORS 0x00f0F0F) AND 0x000
+                                                            0000F
+  939 0000049E 4008            ANDS             R0,R1
+  940 000004A0         
+  941 000004A0 4D1B            LDR              R5,=Count
+  942 000004A2 682D            LDR              R5,[R5,#0]
+  943 000004A4         
+  944 000004A4 1828            ADDS             R0,R5,R0
+  945 000004A6         
+  946 000004A6 210F            MOVS             R1,#0x0000000F ;((((((seed + 7)*34)/5)+13)>>2) EORS 0x00f0F0F) AND 0x000
+                                                            0000F
+  947 000004A8 4008            ANDS             R0,R1
+  948 000004AA         
+  949 000004AA 2803            CMP              R0,#3
+  950 000004AC D902            BLS              DUBILDBYDONE
+  951 000004AE         
+  952 000004AE         GOBACK
+  953 000004AE         
+  954 000004AE 1F00            SUBS             R0,R0,#4
+  955 000004B0         
+  956 000004B0 2804            CMP              R0,#4
+  957 000004B2 DCFC            BGT              GOBACK
+  958 000004B4         
+  959 000004B4         
+  960 000004B4         DUBILDBYDONE
+  961 000004B4         
+  962 000004B4 0001            MOVS             R1,R0
+  963 000004B6         
+  964 000004B6 4814            LDR              R0,=Random  ;storing back
+  965 000004B8 6001            STR              R1,[R0,#0]
+  966 000004BA         
+  967 000004BA 4816            LDR              R0,=LED_Color ;storing in color
+  968 000004BC 7001            STRB             R1,[R0,#0]
+  969 000004BE         
+  970 000004BE 2900            CMP              R1,#0
+  971 000004C0 D005            BEQ              None_Rand
+
+
+
+ARM Macro Assembler    Page 28 
+
+
+  972 000004C2 2901            CMP              R1,#1
+  973 000004C4 D00A            BEQ              Green_Rand
+  974 000004C6 2902            CMP              R1,#2
+  975 000004C8 D00F            BEQ              Red_Rand
+  976 000004CA 2903            CMP              R1,#3
+  977 000004CC D014            BEQ              Both_Rand
+  978 000004CE         
+  979 000004CE         None_Rand
+  980 000004CE         ;Turn off red LED
+  981 000004CE 4813            LDR              R0,=FGPIOE_BASE
+  982 000004D0 4913            LDR              R1,=LED_RED_MASK
+  983 000004D2 6041            STR              R1,[R0,#GPIO_PSOR_OFFSET]
+  984 000004D4         
+  985 000004D4         ;Turn off green LED
+  986 000004D4 4813            LDR              R0,=FGPIOD_BASE
+  987 000004D6 4914            LDR              R1,=LED_GREEN_MASK
+  988 000004D8 6041            STR              R1,[R0,#GPIO_PSOR_OFFSET]
+  989 000004DA         
+  990 000004DA E014            B                Done_Rand
+  991 000004DC         
+  992 000004DC         Green_Rand
+  993 000004DC         ;Turn off red LED
+  994 000004DC 480F            LDR              R0,=FGPIOE_BASE
+  995 000004DE 4910            LDR              R1,=LED_RED_MASK
+  996 000004E0 6041            STR              R1,[R0,#GPIO_PSOR_OFFSET]
+  997 000004E2         
+  998 000004E2         ;Turn on green LED
+  999 000004E2 4810            LDR              R0,=FGPIOD_BASE
+ 1000 000004E4 4910            LDR              R1,=LED_GREEN_MASK
+ 1001 000004E6 6081            STR              R1,[R0,#GPIO_PCOR_OFFSET]
+ 1002 000004E8         
+ 1003 000004E8 E00D            B                Done_Rand
+ 1004 000004EA         Red_Rand
+ 1005 000004EA         ;Turn off green LED
+ 1006 000004EA 480E            LDR              R0,=FGPIOD_BASE
+ 1007 000004EC 490E            LDR              R1,=LED_GREEN_MASK
+ 1008 000004EE 6041            STR              R1,[R0,#GPIO_PSOR_OFFSET]
+ 1009 000004F0         
+ 1010 000004F0         ;Turn on red LED
+ 1011 000004F0 480A            LDR              R0,=FGPIOE_BASE
+ 1012 000004F2 490B            LDR              R1,=LED_RED_MASK
+ 1013 000004F4 6081            STR              R1,[R0,#GPIO_PCOR_OFFSET]
+
+
+
+ARM Macro Assembler    Page 29 
+
+
+ 1014 000004F6         
+ 1015 000004F6 E006            B                Done_Rand
+ 1016 000004F8         
+ 1017 000004F8         Both_Rand
+ 1018 000004F8         
+ 1019 000004F8         ;Turn on red LED
+ 1020 000004F8 4808            LDR              R0,=FGPIOE_BASE
+ 1021 000004FA 4909            LDR              R1,=LED_RED_MASK
+ 1022 000004FC 6081            STR              R1,[R0,#GPIO_PCOR_OFFSET]
+ 1023 000004FE         
+ 1024 000004FE         ;Turn on green LED
+ 1025 000004FE 4809            LDR              R0,=FGPIOD_BASE
+ 1026 00000500 4909            LDR              R1,=LED_GREEN_MASK
+ 1027 00000502 6081            STR              R1,[R0,#GPIO_PCOR_OFFSET]
+ 1028 00000504         
+ 1029 00000504 E7FF            B                Done_Rand
+ 1030 00000506         
+ 1031 00000506         Done_Rand
+ 1032 00000506         
+ 1033 00000506 BD3E            POP              {R1-R5,PC}
+ 1034 00000508         
+ 1035 00000508         
+ 1036 00000508                 ALIGN
+ 1037 00000508 00000000 
+              000002F1 
+              00000000 
+              00000000 
+              00000000 
+              F80FF100 
+              20000000 
+              F80FF0C0 
+              00000020         LTORG
+ 1038 0000052C         ;-----------------------------PrintColor------------------
+ 1039 0000052C         PrintColor
+ 1040 0000052C B53F            PUSH             {R0-R5,LR}
+ 1041 0000052E 48EA            LDR              R0,=LED_Color
+ 1042 00000530 7800            LDRB             R0,[R0,#0]  ;number of color now in R0
+ 1043 00000532         
+ 1044 00000532 2801            CMP              R0,#1
+ 1045 00000534 D009            BEQ              GreenP
+ 1046 00000536 2802            CMP              R0,#2
+ 1047 00000538 D00B            BEQ              RedP
+
+
+
+ARM Macro Assembler    Page 30 
+
+
+ 1048 0000053A 2803            CMP              R0,#3
+ 1049 0000053C D00D            BEQ              BothP
+ 1050 0000053E 2800            CMP              R0,#0
+ 1051 00000540 D0FF            BEQ              NoneP
+ 1052 00000542         
+ 1053 00000542         NoneP
+ 1054 00000542 48E6            LDR              R0,=None_Word
+ 1055 00000544 F000 F8FF       BL               PutStringSB
+ 1056 00000548 E00B            B                Done_ColorP
+ 1057 0000054A         GreenP
+ 1058 0000054A 48E5            LDR              R0,=Green_Word
+ 1059 0000054C F000 F8FB       BL               PutStringSB
+ 1060 00000550 E007            B                Done_ColorP
+ 1061 00000552         RedP
+ 1062 00000552 48E4            LDR              R0,=Red_Word
+ 1063 00000554 F000 F8F7       BL               PutStringSB
+ 1064 00000558 E003            B                Done_ColorP
+ 1065 0000055A         BothP
+ 1066 0000055A 48E3            LDR              R0,=Both_Word
+ 1067 0000055C F000 F8F3       BL               PutStringSB
+ 1068 00000560 E7FF            B                Done_ColorP
+ 1069 00000562         
+ 1070 00000562         Done_ColorP
+ 1071 00000562         
+ 1072 00000562 BD3F            POP              {R0-R5,PC}
+ 1073 00000564         
+ 1074 00000564         ;-----------------------------LEDINIT------------------
+ 1075 00000564         LED_INIT
+ 1076 00000564 B57F            PUSH             {R0-R6,LR}
+ 1077 00000566         ;Enable clock for PORT D and E modules
+ 1078 00000566 48E1            LDR              R0,=SIM_SCGC5
+ 1079 00000568 49E1            LDR              R1,=(SIM_SCGC5_PORTD_MASK)
+ 1080 0000056A 6802            LDR              R2,[R0,#0]
+ 1081 0000056C 430A            ORRS             R2,R2,R1
+ 1082 0000056E 6002            STR              R2,[R0,#0]
+ 1083 00000570         ;Enable clock for PORT D and E modules
+ 1084 00000570 48DE            LDR              R0,=SIM_SCGC5
+ 1085 00000572 49E0            LDR              R1,=(SIM_SCGC5_PORTE_MASK)
+ 1086 00000574 6802            LDR              R2,[R0,#0]
+ 1087 00000576 430A            ORRS             R2,R2,R1
+ 1088 00000578 6002            STR              R2,[R0,#0]
+ 1089 0000057A         ;Select PORT E Pin 29 for GPIO to red LED
+
+
+
+ARM Macro Assembler    Page 31 
+
+
+ 1090 0000057A 48DF            LDR              R0,=PORTE_BASE
+ 1091 0000057C 49DF            LDR              R1,=SET_PTE29_GPIO
+ 1092 0000057E 6741            STR              R1,[R0,#PORTE_PCR29_OFFSET]
+ 1093 00000580         ;Select PORT D Pin 5 for GPIO to green LED
+ 1094 00000580 48DF            LDR              R0,=PORTD_BASE
+ 1095 00000582 49DE            LDR              R1,=SET_PTD5_GPIO
+ 1096 00000584 6141            STR              R1,[R0,#PORTD_PCR5_OFFSET]
+ 1097 00000586 48DF            LDR              R0,=FGPIOD_BASE
+ 1098 00000588 49DF            LDR              R1,=LED_PORTD_MASK
+ 1099 0000058A 6141            STR              R1,[R0,#GPIO_PDDR_OFFSET]
+ 1100 0000058C 48DF            LDR              R0,=FGPIOE_BASE
+ 1101 0000058E 49E0            LDR              R1,=LED_PORTE_MASK
+ 1102 00000590 6141            STR              R1,[R0,#GPIO_PDDR_OFFSET]
+ 1103 00000592 BD7F            POP              {R0-R6,PC}
+ 1104 00000594         
+ 1105 00000594         
+ 1106 00000594         ;-----------------------------------------------------------------
+ 1107 00000594         ;#################################################################
+ 1108 00000594         ;--------------------------------ALL OLD CODE---------------------
+ 1109 00000594         ;#################################################################
+ 1110 00000594         ;-----------------------------------------------------------------
+ 1111 00000594         
+ 1112 00000594         ;--------------------------------CompareString--------------------
+ 1113 00000594         ;recives R0 and R1
+ 1114 00000594         ;compares the strings
+ 1115 00000594         
+ 1116 00000594         CompareString
+ 1117 00000594 B5FC            PUSH{R2-R7,LR}
+ 1118 00000596 2400            MOVS             R4,#0
+ 1119 00000598 0006            MOVS             R6,R0
+ 1120 0000059A 000D            MOVS             R5,R1
+ 1121 0000059C         
+ 1122 0000059C F000 F8B5       BL               LengthStringSB
+ 1123 000005A0         
+ 1124 000005A0 0017            MOVS             R7,R2       ;R7 now has length of string in R0
+ 1125 000005A2 0008            MOVS             R0,R1
+ 1126 000005A4         
+ 1127 000005A4 F000 F8B1       BL               LengthStringSB
+ 1128 000005A8 0015            MOVS             R5,R2       ;R5 now has length of string in R1
+ 1129 000005AA         
+ 1130 000005AA 0030            MOVS             R0,R6       ;R0 has R0 again
+ 1131 000005AC         ;R1 always has R1
+
+
+
+ARM Macro Assembler    Page 32 
+
+
+ 1132 000005AC         
+ 1133 000005AC 42BD            CMP              R5,R7       ;checking if the lengths of the two are equal
+ 1134 000005AE D107            BNE              Fail_CS     ;if not equal then fail
+ 1135 000005B0         
+ 1136 000005B0         Loop_CS
+ 1137 000005B0         
+ 1138 000005B0 5D02            LDRB             R2,[R0,R4]
+ 1139 000005B2 5D0B            LDRB             R3,[R1,R4]
+ 1140 000005B4         
+ 1141 000005B4         
+ 1142 000005B4 429A            CMP              R2,R3       ;compare the things loaded
+ 1143 000005B6 D103            BNE              Fail_CS     ;if not eual then fail
+ 1144 000005B8         
+ 1145 000005B8 2A00            CMP              R2,#0       ;checking to see if null terminate
+ 1146 000005BA D00C            BEQ              Success_CS
+ 1147 000005BC         
+ 1148 000005BC 1C64            ADDS             R4,R4,#1    ;increments counter
+ 1149 000005BE         
+ 1150 000005BE E7F7            B                Loop_CS
+ 1151 000005C0         
+ 1152 000005C0         Fail_CS
+ 1153 000005C0 000A            MOVS             R2,R1       ;preserving R1
+ 1154 000005C2 F3EF 8000       MRS              R0,APSR     ;manually sets C flag to set
+ 1155 000005C6 2120            MOVS             R1,#0x20
+ 1156 000005C8 0609            LSLS             R1,R1,#24
+ 1157 000005CA 4308            ORRS             R0,R0,R1
+ 1158 000005CC F380 8800       MSR              APSR,R0
+ 1159 000005D0         
+ 1160 000005D0 0030            MOVS             R0,R6       ;converting back
+ 1161 000005D2 0011            MOVS             R1,R2
+ 1162 000005D4         
+ 1163 000005D4 E007            B                Done_CS
+ 1164 000005D6         
+ 1165 000005D6         Success_CS
+ 1166 000005D6 F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+ 1167 000005DA 2020            MOVS             R0,#0x20
+ 1168 000005DC 0609            LSLS             R1,R1,#24
+ 1169 000005DE 4388            BICS             R0,R0,R1
+ 1170 000005E0 F380 8800       MSR              APSR,R0
+ 1171 000005E4         
+ 1172 000005E4 0030            MOVS             R0,R6       ;converting back
+ 1173 000005E6         Done_CS
+
+
+
+ARM Macro Assembler    Page 33 
+
+
+ 1174 000005E6 BDFC            POP{R2-R7,PC}
+ 1175 000005E8         
+ 1176 000005E8         ;-------------------------------- InitQueue ------------------------------
+ 1177 000005E8         ;initilizes the queue, R1 must be queue record, can be used for multiple
+ 1178 000005E8         ;queues
+ 1179 000005E8         InitQueue
+ 1180 000005E8 B501            PUSH             {R0,LR}
+ 1181 000005EA         
+ 1182 000005EA 6008            STR              R0,[R1,#IN_PTR]
+ 1183 000005EC 6048            STR              R0,[R1,#OUT_PTR]
+ 1184 000005EE 6088            STR              R0,[R1,#BUF_STRT]
+ 1185 000005F0 1880            ADDS             R0,R0,R2
+ 1186 000005F2 60C8            STR              R0,[R1,#BUF_PAST]
+ 1187 000005F4 740A            STRB             R2,[R1,#BUF_SIZE]
+ 1188 000005F6 2000            MOVS             R0,#0
+ 1189 000005F8 7448            STRB             R0,[R1,#NUM_ENQD]
+ 1190 000005FA         
+ 1191 000005FA BD01            POP              {R0,PC}
+ 1192 000005FC         
+ 1193 000005FC         ;-------------------------------- DeQueue --------------------------------
+ 1194 000005FC         ;R1 Address of Queue record structure
+ 1195 000005FC         ;C flag succes(0)
+ 1196 000005FC         ;the deuque subrotine, dequeus and advances the pointer
+ 1197 000005FC         DeQueue
+ 1198 000005FC B5FE            PUSH             {R1-R7,LR}
+ 1199 000005FE         
+ 1200 000005FE 7C4C            LDRB             R4,[R1,#NUM_ENQD] ;loading values
+ 1201 00000600 680D            LDR              R5,[R1,#IN_PTR]
+ 1202 00000602 688E            LDR              R6,[R1,#BUF_STRT]
+ 1203 00000604 684F            LDR              R7,[R1,#OUT_PTR]
+ 1204 00000606 68CB            LDR              R3,[R1,#BUF_PAST]
+ 1205 00000608         
+ 1206 00000608 2C00            CMP              R4,#0       ;checks if size is zero
+ 1207 0000060A D00F            BEQ              Failed_Dequeue
+ 1208 0000060C 783A            LDRB             R2,[R7,#0]
+ 1209 0000060E         
+ 1210 0000060E 1C7F            ADDS             R7,R7,#1
+ 1211 00000610 1E64            SUBS             R4,R4,#1
+ 1212 00000612         
+ 1213 00000612 744C            STRB             R4,[R1,#NUM_ENQD] ;storing back into loacation
+ 1214 00000614 604F            STR              R7,[R1,#OUT_PTR]
+ 1215 00000616         
+
+
+
+ARM Macro Assembler    Page 34 
+
+
+ 1216 00000616 429F            CMP              R7,R3
+ 1217 00000618 D010            BEQ              InPointer_Bigger2 ;if pointer procgressing past buffer limit,
+ 1218 0000061A         ;then advacne back
+ 1219 0000061A         Done_Success
+ 1220 0000061A F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+ 1221 0000061E 2020            MOVS             R0,#0x20
+ 1222 00000620 0609            LSLS             R1,R1,#24
+ 1223 00000622 4388            BICS             R0,R0,R1
+ 1224 00000624 F380 8800       MSR              APSR,R0
+ 1225 00000628 0010            MOVS             R0,R2
+ 1226 0000062A         
+ 1227 0000062A         DoneD1
+ 1228 0000062A BDFE            POP              {R1-R7,PC}
+ 1229 0000062C         
+ 1230 0000062C         Failed_Dequeue
+ 1231 0000062C         ;Unsuccesfull
+ 1232 0000062C F3EF 8000       MRS              R0,APSR     ;manually sets C flag to set
+ 1233 00000630 2120            MOVS             R1,#0x20
+ 1234 00000632 0609            LSLS             R1,R1,#24
+ 1235 00000634 4308            ORRS             R0,R0,R1
+ 1236 00000636 F380 8800       MSR              APSR,R0
+ 1237 0000063A E7F6            B                DoneD1
+ 1238 0000063C         
+ 1239 0000063C         InPointer_Bigger2
+ 1240 0000063C 0037            MOVS             R7,R6       ;manually moving the pointer back to start
+ 1241 0000063E 604F            STR              R7,[R1,#OUT_PTR]
+ 1242 00000640 E7EB            B                Done_Success
+ 1243 00000642         
+ 1244 00000642         
+ 1245 00000642         ;--------------------------------- EnQueue ------------------------------------
+ 1246 00000642         ;R0 Character to enqueue
+ 1247 00000642         ;R1 Address of Queue record structure
+ 1248 00000642         ;C flag succes(0)
+ 1249 00000642         ;Enqueues the recived value and advances
+ 1250 00000642         Enqueue
+ 1251 00000642         
+ 1252 00000642 B57F            PUSH             {R0-R6,LR}
+ 1253 00000644         
+ 1254 00000644 7C0B            LDRB             R3,[R1,#BUF_SIZE] ;initializing the queue structure
+ 1255 00000646 7C4C            LDRB             R4,[R1,#NUM_ENQD]
+ 1256 00000648 680D            LDR              R5,[R1,#IN_PTR]
+ 1257 0000064A 688E            LDR              R6,[R1,#BUF_STRT]
+
+
+
+ARM Macro Assembler    Page 35 
+
+
+ 1258 0000064C 68CF            LDR              R7,[R1,#BUF_PAST]
+ 1259 0000064E         
+ 1260 0000064E         
+ 1261 0000064E 429C            CMP              R4,R3
+ 1262 00000650 D012            BEQ              Failed_Enqueue ;fails if the queue is full
+ 1263 00000652 7028            STRB             R0,[R5,#0]  ;stores value
+ 1264 00000654 1C6D            ADDS             R5,R5,#1    ;advances counters
+ 1265 00000656 1C64            ADDS             R4,R4,#1
+ 1266 00000658         
+ 1267 00000658 600D            STR              R5,[R1,#IN_PTR] ;stores back
+ 1268 0000065A 744C            STRB             R4,[R1,#NUM_ENQD]
+ 1269 0000065C         
+ 1270 0000065C 42BD            CMP              R5,R7
+ 1271 0000065E D008            BEQ              InPointer_Bigger1 ;if inpointer reaches end of the queue, go back
+ 1272 00000660         
+ 1273 00000660         Done
+ 1274 00000660 F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+ 1275 00000664 2020            MOVS             R0,#0x20
+ 1276 00000666 0609            LSLS             R1,R1,#24
+ 1277 00000668 4388            BICS             R0,R0,R1
+ 1278 0000066A F380 8800       MSR              APSR,R0
+ 1279 0000066E 2000            MOVS             R0,#0
+ 1280 00000670         
+ 1281 00000670         
+ 1282 00000670 BD7F            POP              {R0-R6,PC}
+ 1283 00000672         
+ 1284 00000672         InPointer_Bigger1                    ;if the inpointer is bigger, manually set it back
+ 1285 00000672 0035            MOVS             R5,R6
+ 1286 00000674 600D            STR              R5,[R1,#IN_PTR]
+ 1287 00000676 E7F3            B                Done
+ 1288 00000678         
+ 1289 00000678         Failed_Enqueue
+ 1290 00000678 F3EF 8000       MRS              R0,APSR     ; manually sets C flag to set
+ 1291 0000067C 2120            MOVS             R1,#0x20
+ 1292 0000067E 0609            LSLS             R1,R1,#24
+ 1293 00000680 4308            ORRS             R0,R0,R1
+ 1294 00000682 F380 8800       MSR              APSR,R0
+ 1295 00000686 BD7F            POP              {R0-R6,PC}
+ 1296 00000688         
+ 1297 00000688         ;---------------------------- PutNumHex----------------------
+ 1298 00000688         ;takes in value at R0
+ 1299 00000688         ;doesnt output any values
+
+
+
+ARM Macro Assembler    Page 36 
+
+
+ 1300 00000688         ;converts address into hex value, prints to terminal
+ 1301 00000688         PutNumHex
+ 1302 00000688 B53F            PUSH             {R0-R5,LR}
+ 1303 0000068A         
+ 1304 0000068A 221C            MOVS             R2,#28      ;defining constants that will need to be added
+ 1305 0000068C 230F            MOVS             R3,#0x0000000F
+ 1306 0000068E 0004            MOVS             R4,R0
+ 1307 00000690 2508            MOVS             R5,#8
+ 1308 00000692         
+ 1309 00000692         Loop_PNH
+ 1310 00000692         
+ 1311 00000692 40D0            LSRS             R0,R0,R2    ;shifiting by how much we need
+ 1312 00000694 4018            ANDS             R0,R3
+ 1313 00000696 2809            CMP              R0,#9
+ 1314 00000698 D908            BLS              Number_PNH  ;checks if number
+ 1315 0000069A 3037            ADDS             R0,R0,#55   ;if not assume its letter
+ 1316 0000069C F000 F908       BL               PutChar
+ 1317 000006A0 0020            MOVS             R0,R4
+ 1318 000006A2         
+ 1319 000006A2 1F12            SUBS             R2,R2,#4    ;incrementing 
+ 1320 000006A4 1E6D            SUBS             R5,R5,#1
+ 1321 000006A6 2D00            CMP              R5,#0
+ 1322 000006A8 D009            BEQ              Done_PNH
+ 1323 000006AA E7F2            B                Loop_PNH
+ 1324 000006AC         
+ 1325 000006AC         Number_PNH
+ 1326 000006AC 3030            ADDS             R0,R0,#0x00000030 ;speical case for number 
+ 1327 000006AE F000 F8FF       BL               PutChar
+ 1328 000006B2 0020            MOVS             R0,R4
+ 1329 000006B4         
+ 1330 000006B4 1F12            SUBS             R2,R2,#4
+ 1331 000006B6 1E6D            SUBS             R5,R5,#1
+ 1332 000006B8 2D00            CMP              R5,#0
+ 1333 000006BA D000            BEQ              Done_PNH
+ 1334 000006BC E7E9            B                Loop_PNH
+ 1335 000006BE         
+ 1336 000006BE         Done_PNH
+ 1337 000006BE BD3F            POP              {R0-R5,PC}
+ 1338 000006C0         
+ 1339 000006C0         ;---------------------------------PUTNUMSB----------------------------
+ 1340 000006C0         ;takes value from R0
+ 1341 000006C0         ;doesnt output any values except for PSVR
+
+
+
+ARM Macro Assembler    Page 37 
+
+
+ 1342 000006C0         ;prints to the terminal the least significant bit
+ 1343 000006C0         PutNumSB
+ 1344 000006C0 B503            PUSH             {R0-R1,LR}
+ 1345 000006C2 210F            MOVS             R1,#0x0000000F
+ 1346 000006C4 4008            ANDS             R0,R1
+ 1347 000006C6 F000 F82A       BL               PutNumU
+ 1348 000006CA F000 F8F1       BL               PutChar
+ 1349 000006CE BD03            POP              {R0-R1,PC}
+ 1350 000006D0         
+ 1351 000006D0         ;------------------------------- GETSTRINGSB -------------------------- 
+ 1352 000006D0         ;Recieves address in R0,
+ 1353 000006D0         ;Outputs string to R0
+ 1354 000006D0         ;takes a string that is typed in and then puts into R0
+ 1355 000006D0         GetStringSB
+ 1356 000006D0 B51F            PUSH             { R0 - R4, LR }
+ 1357 000006D2 2300            MOVS             R3,#0       ;initializing counter
+ 1358 000006D4 0004            MOVS             R4,R0       ;storing adress
+ 1359 000006D6 1E49            SUBS             R1,R1,#1    ;subtracting buffer capacity
+ 1360 000006D8         
+ 1361 000006D8         Loop1A                               ;super loop
+ 1362 000006D8 F000 F8F5       BL               GetChar     ;checking if input is "enter"
+ 1363 000006DC 280D            CMP              R0, #CR
+ 1364 000006DE D00B            BEQ              Enter       ;branching if it is
+ 1365 000006E0         
+ 1366 000006E0         
+ 1367 000006E0 4299            CMP              R1,R3       ;checking if index = buffer cpacity
+ 1368 000006E2 D004            BEQ              Skip        ;if it is, skip
+ 1369 000006E4 54E0            STRB             R0,[R4,R3]  ;otherwise store in adress with value (R0) at address (R4) o
+                                                            ffset of increment (R3)
+ 1370 000006E6 1C5B            ADDS             R3,R3,#1    ;incrementing counter
+ 1371 000006E8         
+ 1372 000006E8         
+ 1373 000006E8 F000 F8E2       BL               PutChar     ;printing it
+ 1374 000006EC E7F4            B                Loop1A      ;looping almost forever
+ 1375 000006EE         
+ 1376 000006EE         Skip
+ 1377 000006EE F000 F8EA       BL               GetChar     ;triggered if buffercapacity over limit and ignores everythi
+                                                            ng until enter is hit
+ 1378 000006F2 280D            CMP              R0, #CR
+ 1379 000006F4 D000            BEQ              Enter
+ 1380 000006F6 E7FA            B                Skip
+ 1381 000006F8         Enter                                ;if enter was hit
+
+
+
+ARM Macro Assembler    Page 38 
+
+
+ 1382 000006F8 2000            MOVS             R0,#0       ;storing '0' at end
+ 1383 000006FA 54E0            STRB             R0,[R4,R3]
+ 1384 000006FC 200D            MOVS             R0,#CR      ;printing new line
+ 1385 000006FE F000 F8D7       BL               PutChar
+ 1386 00000702 200A            MOVS             R0,#LF
+ 1387 00000704 F000 F8D4       BL               PutChar
+ 1388 00000708 BD1F            POP              { R0 - R4, PC }
+ 1389 0000070A         
+ 1390 0000070A         
+ 1391 0000070A         ;------------------------------ LENGTHSTRINGSB -------------------------  
+ 1392 0000070A         LengthStringSB
+ 1393 0000070A B50A            PUSH             { R1, R3, LR }
+ 1394 0000070C         
+ 1395 0000070C 2200            MOVS             R2,#0       ;initializing counter
+ 1396 0000070E         
+ 1397 0000070E         Loop2
+ 1398 0000070E 5C83            LDRB             R3,[R0,R2]  ;loading value in string
+ 1399 00000710 2B00            CMP              R3,#0       ;checking if '0', if it is, run away
+ 1400 00000712 D003            BEQ              Ende
+ 1401 00000714 428A            CMP              R2, R1      ;checking if counter = buffercapacity, if it does, run away
+ 1402 00000716 D001            BEQ              Ende
+ 1403 00000718 1C52            ADDS             R2,R2, #1
+ 1404 0000071A         
+ 1405 0000071A E7F8            B                Loop2       ;looping almost forver
+ 1406 0000071C         Ende
+ 1407 0000071C         
+ 1408 0000071C BD0A            POP              { R1, R3, PC }
+ 1409 0000071E         
+ 1410 0000071E         ;---------------------------------- PUTNUMU ------------------------------
+ 1411 0000071E         ;prints the number in decimal form in R0
+ 1412 0000071E         ;does not output any registers
+ 1413 0000071E         PutNumU
+ 1414 0000071E B507            PUSH             { R0 - R2, LR }
+ 1415 00000720 2200            MOVS             R2,#0       ;initializng counter
+ 1416 00000722         Loop3
+ 1417 00000722 0001            MOVS             R1, R0      ;setting up for DIVU (R1 divedend, R0 divider)
+ 1418 00000724 200A            MOVS             R0, #10
+ 1419 00000726 F000 F81B       BL               DIVU        ;calling DIVU
+ 1420 0000072A B402            PUSH             {R1}        ;storing in stack because it gets values in revers order
+ 1421 0000072C 1C52            ADDS             R2,R2,#1
+ 1422 0000072E 2800            CMP              R0, #0      ;checking done
+ 1423 00000730 D000            BEQ              Out         ;if it is, end
+
+
+
+ARM Macro Assembler    Page 39 
+
+
+ 1424 00000732 E7F6            B                Loop3
+ 1425 00000734         
+ 1426 00000734         Out
+ 1427 00000734 BC01            POP              {R0}        ;finishing up
+ 1428 00000736 1E52            SUBS             R2,R2,#1
+ 1429 00000738 3030            ADDS             R0,R0,#'0'
+ 1430 0000073A F000 F8B9       BL               PutChar
+ 1431 0000073E 2A00            CMP              R2,#0
+ 1432 00000740 D000            BEQ              Done4
+ 1433 00000742 E7F7            B                Out
+ 1434 00000744         
+ 1435 00000744         Done4
+ 1436 00000744 BD07            POP              { R0 - R2, PC }
+ 1437 00000746         
+ 1438 00000746         ;--------------------------------- PUTSTRINGSB -----------------------------
+ 1439 00000746         ;prints the string stored in R0 to terminal
+ 1440 00000746         ;does not output any registers
+ 1441 00000746         PutStringSB
+ 1442 00000746 B50F            PUSH             { R0, R1, R2, R3, LR }
+ 1443 00000748         
+ 1444 00000748 2300            MOVS             R3,#0       ;counter
+ 1445 0000074A 0002            MOVS             R2,R0       ;R2 gets adress
+ 1446 0000074C         
+ 1447 0000074C         Loop4
+ 1448 0000074C 428B            CMP              R3,R1       ;compares counter with MAX SIZE
+ 1449 0000074E D006            BEQ              Ende2
+ 1450 00000750         
+ 1451 00000750 5CD0            LDRB             R0,[R2,R3]  ;loads value at R2 offset R3 into R0
+ 1452 00000752 2800            CMP              R0,#0       ;checks if null terminator
+ 1453 00000754 D003            BEQ              Ende2
+ 1454 00000756         
+ 1455 00000756 F000 F8AB       BL               PutChar     ;prints
+ 1456 0000075A 1C5B            ADDS             R3,R3, #1   ;adds to counter
+ 1457 0000075C         
+ 1458 0000075C E7F6            B                Loop4
+ 1459 0000075E         Ende2
+ 1460 0000075E         
+ 1461 0000075E BD0F            POP              { R0, R1, R2, R3, PC }
+ 1462 00000760         
+ 1463 00000760         ;------------------------------------- DIVU --------------------------------
+ 1464 00000760         ;takes in Diveded (R1) and Divisor (R0)
+ 1465 00000760         ;returns the dividen amount
+
+
+
+ARM Macro Assembler    Page 40 
+
+
+ 1466 00000760         DIVU
+ 1467 00000760 B404            PUSH             {R2}        ;Pushing R2 to save
+ 1468 00000762 2200            MOVS             R2,#0
+ 1469 00000764 2800            CMP              R0,#0       ;checks if Divide by zero
+ 1470 00000766 D009            BEQ              DIV_BY_ZERO
+ 1471 00000768         
+ 1472 00000768 2900            CMP              R1,#0       ;checks if Dividend is zero
+ 1473 0000076A D00F            BEQ              EndIFF
+ 1474 0000076C         
+ 1475 0000076C 4281    While   CMP              R1,R0       ;the main loop where Dividen is conitunually subtracted
+ 1476 0000076E D302            BLO              Endwhile    ;by the Divider until Dividen is either 0 or less than
+ 1477 00000770         ;the Divider... R2 is used as the quotient
+ 1478 00000770 1A09            SUBS             R1,R1,R0
+ 1479 00000772 1C52            ADDS             R2,R2,#1
+ 1480 00000774         
+ 1481 00000774 E7FA            B                While
+ 1482 00000776         Endwhile
+ 1483 00000776 0010            MOVS             R0,R2
+ 1484 00000778         
+ 1485 00000778         
+ 1486 00000778 BC04    DIVU_DONE
+                               POP              {R2}        ;DIVU_DONE used when needed to return out of DIVU subroutine
+                                                            
+ 1487 0000077A         
+ 1488 0000077A 4770            BX               LR
+ 1489 0000077C         
+ 1490 0000077C         
+ 1491 0000077C F3EF 8000 
+                       DIV_BY_ZERO
+                               MRS              R0,APSR     ;Divide by zeros manually sets C flag to set
+ 1492 00000780 2120            MOVS             R1,#0x20
+ 1493 00000782 0609            LSLS             R1,R1,#24
+ 1494 00000784 4308            ORRS             R0,R0,R1
+ 1495 00000786 F380 8800       MSR              APSR,R0
+ 1496 0000078A E7F5            B                DIVU_DONE
+ 1497 0000078C         
+ 1498 0000078C F3EF 8000 
+                       EndIFF  MRS              R0,APSR     ;EndIFF manually sets C flag to clear if dividend is 0
+ 1499 00000790 2020            MOVS             R0,#0x20
+ 1500 00000792 0609            LSLS             R1,R1,#24
+ 1501 00000794 4388            BICS             R0,R0,R1
+ 1502 00000796 F380 8800       MSR              APSR,R0
+
+
+
+ARM Macro Assembler    Page 41 
+
+
+ 1503 0000079A 2000            MOVS             R0,#0
+ 1504 0000079C         
+ 1505 0000079C E7EC            B                DIVU_DONE
+ 1506 0000079E         
+ 1507 0000079E         ;------------------------------------- INIT --------------------------------
+ 1508 0000079E         ;initializes the UART_IRQ
+ 1509 0000079E         ;code taken from lecture
+ 1510 0000079E         ;shown in chunks
+ 1511 0000079E         Init_PIT_IRQ
+ 1512 0000079E         ;enabling pit clock
+ 1513 0000079E B50F            PUSH             {R0-R3,LR}
+ 1514 000007A0 485C            LDR              R0,=SIM_SCGC6
+ 1515 000007A2 495D            LDR              R1,=SIM_SCGC6_PIT_MASK
+ 1516 000007A4 6802            LDR              R2,[R0,#0]
+ 1517 000007A6 430A            ORRS             R2,R2,R1
+ 1518 000007A8 6002            STR              R2,[R0,#0]
+ 1519 000007AA         
+ 1520 000007AA         ;disabling timer
+ 1521 000007AA 485C            LDR              R0,=PIT_CH0_BASE
+ 1522 000007AC 495C            LDR              R1,=PIT_TCTRL_TEN_MASK
+ 1523 000007AE 6882            LDR              R2,[R0,#PIT_TCTRL_OFFSET]
+ 1524 000007B0 438A            BICS             R2,R2,R1
+ 1525 000007B2 6082            STR              R2,[R0,#PIT_TCTRL_OFFSET]
+ 1526 000007B4         
+ 1527 000007B4         
+ 1528 000007B4         ;setting pit interrupt priority
+ 1529 000007B4 485B            LDR              R0,=PIT_IPR
+ 1530 000007B6 495C            LDR              R1,=NVIC_IPR_PIT_MASK
+ 1531 000007B8 6803            LDR              R3,[R0,#0]
+ 1532 000007BA 438B            BICS             R3,R3,R1
+ 1533 000007BC 6003            STR              R3,[R0,#0]
+ 1534 000007BE 485B            LDR              R0,=NVIC_ICPR
+ 1535 000007C0 495B            LDR              R1,=NVIC_ICPR_PIT_MASK
+ 1536 000007C2 6001            STR              R1,[R0,#0]
+ 1537 000007C4         
+ 1538 000007C4         ;clearing any pending PIT interrupts
+ 1539 000007C4 4859            LDR              R0,=NVIC_ICPR
+ 1540 000007C6 495A            LDR              R1,=NVIC_ICPR_PIT_MASK
+ 1541 000007C8 6001            STR              R1,[R0,#0]
+ 1542 000007CA         
+ 1543 000007CA         ;unmaksing PIt interrupts
+ 1544 000007CA 485A            LDR              R0,=NVIC_ISER
+
+
+
+ARM Macro Assembler    Page 42 
+
+
+ 1545 000007CC 4958            LDR              R1,=NVIC_ISER_PIT_MASK
+ 1546 000007CE 6001            STR              R1,[R0,#0]
+ 1547 000007D0         
+ 1548 000007D0         ;enabling pit modual
+ 1549 000007D0 4859            LDR              R0,=PIT_BASE
+ 1550 000007D2 4953            LDR              R1,=PIT_MCR_EN_FRZ
+ 1551 000007D4 6001            STR              R1,[R0,#PIT_MCR_OFFSET]
+ 1552 000007D6         
+ 1553 000007D6         ;setting interrupt for every 0.001s
+ 1554 000007D6 4851            LDR              R0,=PIT_CH0_BASE
+ 1555 000007D8 4958            LDR              R1,=PIT_LDVAL_10ms
+ 1556 000007DA 6001            STR              R1,[R0,#PIT_LDVAL_OFFSET]
+ 1557 000007DC         
+ 1558 000007DC         ;enabling PIt timer to channel 0 for interrupts
+ 1559 000007DC 4958            LDR              R1,=PIT_TCTRL_CH_IE
+ 1560 000007DE 6081            STR              R1,[R0,#PIT_TCTRL_OFFSET]
+ 1561 000007E0         
+ 1562 000007E0 BD0F            POP              {R0-R3,PC}
+ 1563 000007E2         
+ 1564 000007E2         ;------------------------------------- INIT --------------------------------
+ 1565 000007E2         ;initializes the UART_IRQ
+ 1566 000007E2         ;code taken from lecture
+ 1567 000007E2         ;shown in chunks
+ 1568 000007E2         Init_UART0_IRQ
+ 1569 000007E2 B50E            PUSH             { R1, R2, R3, LR}
+ 1570 000007E4         ;Select MCGPLLCLK / 2 as UART0 clock source
+ 1571 000007E4 4857            LDR              R0,=SIM_SOPT2
+ 1572 000007E6 4958            LDR              R1,=SIM_SOPT2_UART0SRC_MASK
+ 1573 000007E8 6802            LDR              R2,[R0,#0]
+ 1574 000007EA 438A            BICS             R2,R2,R1
+ 1575 000007EC 4957            LDR              R1,=SIM_SOPT2_UART0_MCGPLLCLK_DIV2
+ 1576 000007EE 430A            ORRS             R2,R2,R1
+ 1577 000007F0 6002            STR              R2,[R0,#0]
+ 1578 000007F2         ;Enable external connection for UART0
+ 1579 000007F2 4857            LDR              R0,=SIM_SOPT5
+ 1580 000007F4 4957            LDR              R1,= SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+ 1581 000007F6 6802            LDR              R2,[R0,#0]
+ 1582 000007F8 438A            BICS             R2,R2,R1
+ 1583 000007FA 6002            STR              R2,[R0,#0]
+ 1584 000007FC         ;Enable clock for UART0 module
+ 1585 000007FC 4856            LDR              R0,=SIM_SCGC4
+ 1586 000007FE 4957            LDR              R1,= SIM_SCGC4_UART0_MASK
+
+
+
+ARM Macro Assembler    Page 43 
+
+
+ 1587 00000800 6802            LDR              R2,[R0,#0]
+ 1588 00000802 430A            ORRS             R2,R2,R1
+ 1589 00000804 6002            STR              R2,[R0,#0]
+ 1590 00000806         ;Enable clock for Port A module
+ 1591 00000806 4839            LDR              R0,=SIM_SCGC5
+ 1592 00000808 4955            LDR              R1,= SIM_SCGC5_PORTA_MASK
+ 1593 0000080A 6802            LDR              R2,[R0,#0]
+ 1594 0000080C 430A            ORRS             R2,R2,R1
+ 1595 0000080E 6002            STR              R2,[R0,#0]
+ 1596 00000810         ;Connect PORT A Pin 1 (PTA1) to UART0 Rx (J1 Pin 02)
+ 1597 00000810 4854            LDR              R0,=PORTA_PCR1
+ 1598 00000812 4955            LDR              R1,=PORT_PCR_SET_PTA1_UART0_RX
+ 1599 00000814 6001            STR              R1,[R0,#0]
+ 1600 00000816         ;Connect PORT A Pin 2 (PTA2) to UART0 Tx (J1 Pin 04)
+ 1601 00000816 4855            LDR              R0,=PORTA_PCR2
+ 1602 00000818 4953            LDR              R1,=PORT_PCR_SET_PTA2_UART0_TX
+ 1603 0000081A 6001            STR              R1,[R0,#0]
+ 1604 0000081C         
+ 1605 0000081C         
+ 1606 0000081C         ;Disable UART0 receiver and transmitter
+ 1607 0000081C 4854            LDR              R0,=UART0_BASE
+ 1608 0000081E 210C            MOVS             R1,#UART0_C2_T_R
+ 1609 00000820 78C2            LDRB             R2,[R0,#UART0_C2_OFFSET]
+ 1610 00000822 438A            BICS             R2,R2,R1
+ 1611 00000824 70C2            STRB             R2,[R0,#UART0_C2_OFFSET]
+ 1612 00000826         ;Set UART0 for 9600 baud, 8N1 protocol
+ 1613 00000826 2101            MOVS             R1,#UART0_BDH_9600
+ 1614 00000828 7001            STRB             R1,[R0,#UART0_BDH_OFFSET]
+ 1615 0000082A 2138            MOVS             R1,#UART0_BDL_9600
+ 1616 0000082C 7041            STRB             R1,[R0,#UART0_BDL_OFFSET] ;Somethign on here
+ 1617 0000082E 2100            MOVS             R1,#UART0_C1_8N1
+ 1618 00000830 7081            STRB             R1,[R0,#UART0_C1_OFFSET]
+ 1619 00000832 2100            MOVS             R1,#UART0_C3_NO_TXINV
+ 1620 00000834 7181            STRB             R1,[R0,#UART0_C3_OFFSET]
+ 1621 00000836 210F            MOVS             R1,#UART0_C4_NO_MATCH_OSR_16
+ 1622 00000838 7281            STRB             R1,[R0,#UART0_C4_OFFSET]
+ 1623 0000083A 2100            MOVS             R1,#UART0_C5_NO_DMA_SSR_SYNC
+ 1624 0000083C 72C1            STRB             R1,[R0,#UART0_C5_OFFSET]
+ 1625 0000083E 211F            MOVS             R1,#UART0_S1_CLEAR_FLAGS
+ 1626 00000840 7101            STRB             R1,[R0,#UART0_S1_OFFSET]
+ 1628 00000842 21C0            MOVS             R1,    #UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+ 1629 00000844 7141            STRB             R1,[R0,#UART0_S2_OFFSET]
+
+
+
+ARM Macro Assembler    Page 44 
+
+
+ 1630 00000846         ;Enable UART0 receiver and transmitter
+ 1631 00000846 212C            MOVS             R1,#UART0_C2_T_RI
+ 1632 00000848 70C1            STRB             R1,[R0,#UART0_C2_OFFSET]
+ 1633 0000084A         
+ 1634 0000084A 484A            LDR              R0,=RxQBuffer
+ 1635 0000084C 494A            LDR              R1,=RxQRecord
+ 1636 0000084E 2250            MOVS             R2,#TRxQ_BUF_SZ
+ 1637 00000850 F7FF FECA       BL               InitQueue
+ 1638 00000854         
+ 1639 00000854 4849            LDR              R0,=TxQBuffer
+ 1640 00000856 494A            LDR              R1,=TxQRecord
+ 1641 00000858 2250            MOVS             R2,#TRxQ_BUF_SZ
+ 1642 0000085A F7FF FEC5       BL               InitQueue
+ 1643 0000085E         
+ 1644 0000085E         ;added for prelab 9
+ 1645 0000085E         ;Set UART IRQ Priority
+ 1646 0000085E 4849            LDR              R0,=UART0_IPR
+ 1647 00000860 4A49            LDR              R2,=NVIC_IPR_UART0_PRI_3
+ 1648 00000862 6803            LDR              R3,[R0,#0]
+ 1649 00000864 4313            ORRS             R3,R3,R2
+ 1650 00000866 6003            STR              R3,[R0,#0]
+ 1651 00000868         
+ 1652 00000868         ;clearing pending uart0Interrupts
+ 1653 00000868 4830            LDR              R0,=NVIC_ICPR
+ 1654 0000086A 4921            LDR              R1,=NVIC_ICPR_UART0_MASK
+ 1655 0000086C 6001            STR              R1,[R0,#0]
+ 1656 0000086E         
+ 1657 0000086E         ;unmaks UART0 interrupts
+ 1658 0000086E 4831            LDR              R0,=NVIC_ISER
+ 1659 00000870 491F            LDR              R1,=NVIC_ISER_UART0_MASK
+ 1660 00000872 6001            STR              R1,[R0,#0]
+ 1661 00000874         
+ 1662 00000874 BD0E            POP              { R1, R2, R3, PC}
+ 1663 00000876         
+ 1664 00000876         ;-----------------------------------UART0-ISR---------------------------------
+ 1665 00000876         ;the interrupt handler that is called by the vector table
+ 1666 00000876         UART0_ISR
+ 1667 00000876 B672            CPSID            I
+ 1668 00000878 B5E0            PUSH             {R5-R7, LR}
+ 1669 0000087A         
+ 1670 0000087A 4A3D            LDR              R2,=UART0_BASE ;recives the base
+ 1671 0000087C 78D1            LDRB             R1,[R2,#UART0_C2_OFFSET]
+
+
+
+ARM Macro Assembler    Page 45 
+
+
+ 1672 0000087E 2080            MOVS             R0,#UART0_C2_TIE_MASK ;masking
+ 1673 00000880         
+ 1674 00000880 4208            TST              R0,R1       ;testing the value in the offset verses the 
+ 1675 00000882         ;tie mask
+ 1676 00000882 D00B            BEQ              RxInterrupt ;if they equal, then its confimed a Rx interrupt and brankes
+                                                            
+ 1677 00000884 7911            LDRB             R1,[R2,#UART0_S1_OFFSET]
+ 1678 00000886 2080            MOVS             R0,#UART0_S1_TDRE_MASK ;TDRE mask
+ 1679 00000888         
+ 1680 00000888 4208            TST              R0,R1       ;checks again
+ 1681 0000088A         
+ 1682 0000088A D007            BEQ              RxInterrupt ;if they equal, then its confimed a Rx interrupt and brankes
+                                                            
+ 1683 0000088C         
+ 1684 0000088C 493C            LDR              R1,=TxQRecord ;if code has lasted this far, then TxQRecord is loaded
+ 1685 0000088E         
+ 1686 0000088E F7FF FEB5       BL               DeQueue     ;dequeues
+ 1687 00000892         
+ 1688 00000892 D201            BCS              Else_01     ;if it fails, initiate else
+ 1689 00000894         
+ 1690 00000894 71D0            STRB             R0,[R2,#UART0_D_OFFSET]
+ 1691 00000896 E001            B                RxInterrupt ;goes to RxInterrupt since it has failed
+ 1692 00000898         
+ 1693 00000898         Else_01                              ;else loop that branches
+ 1694 00000898 212C            MOVS             R1,#UART0_C2_T_RI
+ 1695 0000089A 70D1            STRB             R1,[R2,#UART0_C2_OFFSET]
+ 1696 0000089C         
+ 1697 0000089C         RxInterrupt                          ;Rxinterupt, which is called if it is confimred to be a Rx c
+                                                            ase
+ 1698 0000089C         
+ 1699 0000089C 7911            LDRB             R1,[R2,#UART0_S1_OFFSET]
+ 1700 0000089E 2020            MOVS             R0,#UART0_S1_RDRF_MASK ;masking and so forth
+ 1701 000008A0         
+ 1702 000008A0 4208            TST              R0,R1
+ 1703 000008A2         
+ 1704 000008A2 D003            BEQ              Over_ISR
+ 1705 000008A4         
+ 1706 000008A4 79D0            LDRB             R0,[R2,#UART0_D_OFFSET]
+ 1707 000008A6 4934            LDR              R1,=RxQRecord ;loading RxQrecord and then enquing
+ 1708 000008A8 F7FF FECB       BL               Enqueue
+ 1709 000008AC         
+ 1710 000008AC         Over_ISR
+
+
+
+ARM Macro Assembler    Page 46 
+
+
+ 1711 000008AC         
+ 1712 000008AC B662            CPSIE            I           ;stop masking
+ 1713 000008AE BDE0            POP              {R5-R7,PC}
+ 1714 000008B0         
+ 1715 000008B0         ;--------------------------- PUTCHAR -----------------------
+ 1716 000008B0         ;Recives R0
+ 1717 000008B0         ;Places it onto termianl screen
+ 1718 000008B0         ;does not modify registers
+ 1719 000008B0         PutChar
+ 1720 000008B0 B50F            PUSH             { R0, R1, R2, R3, LR }
+ 1721 000008B2 4933            LDR              R1,=TxQRecord ;loading TxQBuffer
+ 1722 000008B4         PC_Loop
+ 1723 000008B4 B672            CPSID            I
+ 1724 000008B6 F7FF FEC4       BL               Enqueue     ;enquing item in R0
+ 1725 000008BA B662            CPSIE            I
+ 1726 000008BC D2FA            BCS              PC_Loop
+ 1727 000008BE         
+ 1728 000008BE 482C            LDR              R0,=UART0_BASE
+ 1729 000008C0 21AC            MOVS             R1,#UART0_C2_TI_RI
+ 1730 000008C2 70C1            STRB             R1,[R0,#UART0_C2_OFFSET]
+ 1731 000008C4         
+ 1732 000008C4 BD0F            POP              { R0, R1, R2, R3, PC }
+ 1733 000008C6         
+ 1734 000008C6         ;--------------------------- GETCHAR -----------------------
+ 1735 000008C6         ;takes terminal off of screen that has been entered
+ 1736 000008C6         ;places value into R0 register
+ 1737 000008C6         GetChar                              ;copy and paste code of Getchar
+ 1738 000008C6 B50E            PUSH             { R1, R2, R3, LR }
+ 1739 000008C8 492B            LDR              R1,=RxQRecord ;loading RxQBuff
+ 1740 000008CA         GC_Loop
+ 1741 000008CA B672            CPSID            I
+ 1742 000008CC F7FF FE96       BL               DeQueue     ;dequeuing from the queue
+ 1743 000008D0 B662            CPSIE            I
+ 1744 000008D2         
+ 1745 000008D2 D2FA            BCS              GC_Loop
+ 1746 000008D4         
+ 1747 000008D4 BD0E            POP              { R1, R2, R3, PC }
+ 1748 000008D6         
+ 1749 000008D6         
+ 1750 000008D6         ;>>>>>   end subroutine code <<<<<
+ 1751 000008D6 00 00           ALIGN
+ 1752 000008D8         ;****************************************************************
+
+
+
+ARM Macro Assembler    Page 47 
+
+
+ 1753 000008D8         ;Vector Table Mapped to Address 0 at Reset
+ 1754 000008D8         ;Linker requires __Vectors to be exported
+ 1755 000008D8 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              40048038 
+              00001000 
+              00002000 
+              4004D000 
+              01000100 
+              4004C000 
+              F80FF0C0 
+              00000020 
+              F80FF100 
+              20000000 
+              4004803C 
+              00800000 
+              40037100 
+              00000001 
+              E000E414 
+              00C00000 
+              E000E280 
+              00400000 
+              E000E100 
+              40037000 
+              0003A97F 
+              00000003 
+              40048004 
+              0C000000 
+              04010000 
+              40048010 
+              00010007 
+              40048034 
+              00000400 
+              00000200 
+              40049004 
+              01000200 
+              40049008 
+              4006A000 
+              00000000 
+
+
+
+ARM Macro Assembler    Page 48 
+
+
+              00000000 
+              00000000 
+              00000000 
+              E000E40C 
+              000000C0 
+              00000000 
+              00000000 
+              00000000 
+              00000000         AREA             RESET, DATA, READONLY
+ 1756 00000000                 EXPORT           __Vectors
+ 1757 00000000                 EXPORT           __Vectors_End
+ 1758 00000000                 EXPORT           __Vectors_Size
+ 1759 00000000                 IMPORT           __initial_sp
+ 1760 00000000                 IMPORT           Dummy_Handler
+ 1761 00000000         __Vectors
+ 1762 00000000         ;ARM core vectors
+ 1763 00000000 00000000        DCD              __initial_sp ;00:end of stack
+ 1764 00000004 00000000        DCD              Reset_Handler ;01:reset vector
+ 1765 00000008 00000000        DCD              Dummy_Handler ;02:NMI
+ 1766 0000000C 00000000        DCD              Dummy_Handler ;03:hard fault
+ 1767 00000010 00000000        DCD              Dummy_Handler ;04:(reserved)
+ 1768 00000014 00000000        DCD              Dummy_Handler ;05:(reserved)
+ 1769 00000018 00000000        DCD              Dummy_Handler ;06:(reserved)
+ 1770 0000001C 00000000        DCD              Dummy_Handler ;07:(reserved)
+ 1771 00000020 00000000        DCD              Dummy_Handler ;08:(reserved)
+ 1772 00000024 00000000        DCD              Dummy_Handler ;09:(reserved)
+ 1773 00000028 00000000        DCD              Dummy_Handler ;10:(reserved)
+ 1774 0000002C 00000000        DCD              Dummy_Handler ;11:SVCall (supervisor call)
+ 1775 00000030 00000000        DCD              Dummy_Handler ;12:(reserved)
+ 1776 00000034 00000000        DCD              Dummy_Handler ;13:(reserved)
+ 1777 00000038 00000000        DCD              Dummy_Handler ;14:PendableSrvReq (pendable request 
+ 1778 0000003C         ;   for system service)
+ 1779 0000003C 00000000        DCD              Dummy_Handler ;15:SysTick (system tick timer)
+ 1780 00000040 00000000        DCD              Dummy_Handler ;16:DMA channel 0 xfer complete/error
+ 1781 00000044 00000000        DCD              Dummy_Handler ;17:DMA channel 1 xfer complete/error
+ 1782 00000048 00000000        DCD              Dummy_Handler ;18:DMA channel 2 xfer complete/error
+ 1783 0000004C 00000000        DCD              Dummy_Handler ;19:DMA channel 3 xfer complete/error
+ 1784 00000050 00000000        DCD              Dummy_Handler ;20:(reserved)
+ 1785 00000054 00000000        DCD              Dummy_Handler ;21:command complete; read collision
+ 1786 00000058 00000000        DCD              Dummy_Handler ;22:low-voltage detect;
+ 1787 0000005C         ;   low-voltage warning
+ 1788 0000005C 00000000        DCD              Dummy_Handler ;23:low leakage wakeup
+
+
+
+ARM Macro Assembler    Page 49 
+
+
+ 1789 00000060 00000000        DCD              Dummy_Handler ;24:I2C0
+ 1790 00000064 00000000        DCD              Dummy_Handler ;25:I2C1
+ 1791 00000068 00000000        DCD              Dummy_Handler ;26:SPI0 (all IRQ sources)
+ 1792 0000006C 00000000        DCD              Dummy_Handler ;27:SPI1 (all IRQ sources)
+ 1793 00000070 00000000        DCD              UART0_ISR   ;28:UART0 (status; error)
+ 1794 00000074 00000000        DCD              Dummy_Handler ;29:UART1 (status; error)
+ 1795 00000078 00000000        DCD              Dummy_Handler ;30:UART2 (status; error)
+ 1796 0000007C 00000000        DCD              Dummy_Handler ;31:ADC0
+ 1797 00000080 00000000        DCD              Dummy_Handler ;32:CMP0
+ 1798 00000084 00000000        DCD              Dummy_Handler ;33:TPM0
+ 1799 00000088 00000000        DCD              Dummy_Handler ;34:TPM1
+ 1800 0000008C 00000000        DCD              Dummy_Handler ;35:TPM2
+ 1801 00000090 00000000        DCD              Dummy_Handler ;36:RTC (alarm)
+ 1802 00000094 00000000        DCD              Dummy_Handler ;37:RTC (seconds)
+ 1803 00000098 00000000        DCD              PIT_ISR     ;38:PIT (all IRQ sources)
+ 1804 0000009C 00000000        DCD              Dummy_Handler ;39:I2S0
+ 1805 000000A0 00000000        DCD              Dummy_Handler ;40:USB0
+ 1806 000000A4 00000000        DCD              Dummy_Handler ;41:DAC0
+ 1807 000000A8 00000000        DCD              Dummy_Handler ;42:TSI0
+ 1808 000000AC 00000000        DCD              Dummy_Handler ;43:MCG
+ 1809 000000B0 00000000        DCD              Dummy_Handler ;44:LPTMR0
+ 1810 000000B4 00000000        DCD              Dummy_Handler ;45:Segment LCD
+ 1811 000000B8 00000000        DCD              Dummy_Handler ;46:PORTA pin detect
+ 1812 000000BC 00000000        DCD              Dummy_Handler ;47:PORTC and PORTD pin detect  
+ 1813 000000C0         
+ 1814 000000C0         __Vectors_End
+ 1815 000000C0 000000C0 
+                       __Vectors_Size
+                               EQU              __Vectors_End - __Vectors
+ 1816 000000C0                 ALIGN
+ 1817 000000C0         ;****************************************************************
+ 1818 000000C0         ;Constants
+ 1819 000000C0                 AREA             MyConst,DATA,READONLY
+ 1820 00000000         ;>>>>> begin constants here <<<<<
+ 1821 00000000 52 6F 75 
+              6E 64 20 
+              00       LoopString
+                               DCB              "Round ",0
+ 1822 00000007         
+ 1823 00000007 20 20 20 
+              20 54 69 
+              6D 65 20 
+
+
+
+ARM Macro Assembler    Page 50 
+
+
+              6F 66 20 
+              3A 20 00 Entered DCB              "    Time of : ",0
+ 1824 00000016 20 20 20 
+              20 53 63 
+              6F 72 65 
+              20 69 73 
+              3A 20 00 ScoreIs DCB              "    Score is: ",0
+ 1825 00000025 6D 73 00 
+                       TimeUnit
+                               DCB              "ms",0
+ 1826 00000028 20 57 72 
+              6F 6E 67 
+              20 20 20 
+              20 20 20 
+              20 20 2D 
+              53 75 62 
+              74 72 61 
+              63 74 69 
+              6E 67 20 
+              32 30 30 
+              20 66 72 
+              6F 6D 20 
+              73 63 6F 
+              72 65 2D 
+              20 20 20 
+              20 20 20 
+              20 20 00 Wrong   DCB              " Wrong        -Subtracting 200 from score-        ",0
+ 1827 0000005B 20 4F 75 
+              74 20 6F 
+              66 20 74 
+              69 6D 65 
+              2D 2D 63 
+              6F 6C 6F 
+              72 20 77 
+              61 73 20 
+              3A 20 00 OutOfTime
+                               DCB              " Out of time--color was : ",0
+ 1828 00000076 20 43 6F 
+              72 72 65 
+              63 74 2D 
+              2D 63 6F 
+              6C 6F 72 
+
+
+
+ARM Macro Assembler    Page 51 
+
+
+              20 77 61 
+              73 20 20 
+              20 20 20 
+              3A 20 00 CorrectColor
+                               DCB              " Correct--color was     : ",0
+ 1829 00000091         
+ 1830 00000091 4E 6F 6E 
+              65 20 00 None_Word
+                               DCB              "None ",0
+ 1831 00000097 47 72 65 
+              65 6E 00 Green_Word
+                               DCB              "Green",0
+ 1832 0000009D 52 65 64 
+              20 20 00 Red_Word
+                               DCB              "Red  ",0
+ 1833 000000A3 42 6F 74 
+              68 20 00 Both_Word
+                               DCB              "Both ",0
+ 1834 000000A9         
+ 1835 000000A9 2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 43 
+              6F 6E 67 
+              72 61 64 
+              75 6C 61 
+              74 69 6F 
+              6E 73 21 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              00       Congradulations
+                               DCB              "-----------------Congradulations!------------------",0
+ 1836 000000DD 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 59 
+
+
+
+ARM Macro Assembler    Page 52 
+
+
+              6F 75 20 
+              66 69 6E 
+              69 73 68 
+              65 64 20 
+              77 69 74 
+              68 20 61 
+              20 73 63 
+              6F 72 65 
+              20 6F 66 
+              3A 20 00 FinishedWith
+                               DCB              "           You finished with a score of: ",0
+ 1837 00000107 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 50 6C 
+              61 79 20 
+              61 67 61 
+              69 6E 20 
+              5B 79 2F 
+              6E 5D 3F 
+              00       PlayAgain
+                               DCB              "                Play again [y/n]?",0
+ 1838 00000129 20 51 75 
+              69 74 69 
+              6E 67 00 Quiting DCB              " Quiting",0
+ 1839 00000132         
+ 1840 00000132 50 72 65 
+              73 73 20 
+              61 6E 79 
+              20 6B 65 
+              79 20 74 
+              6F 20 72 
+              65 73 74 
+              61 72 74 
+              20 74 68 
+              65 20 72 
+              6F 75 6E 
+              64 00    RestartRound
+                               DCB              "Press any key to restart the round",0
+ 1841 00000155         
+
+
+
+ARM Macro Assembler    Page 53 
+
+
+ 1842 00000155 2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              57 65 6C 
+              63 6F 6D 
+              65 20 74 
+              6F 20 74 
+              68 65 20 
+              47 61 6D 
+              65 21 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              2D 2D 2D 
+              00       InitString1
+                               DCB              "---------------Welcome to the Game!----------------",0
+ 1843 00000189 53 63 6F 
+              72 65 20 
+              70 6F 69 
+              6E 74 73 
+              20 62 79 
+              20 70 75 
+              73 68 69 
+              6E 67 20 
+              74 68 65 
+              20 6B 65 
+              79 20 74 
+              68 61 74 
+              20 63 6F 
+              72 72 65 
+              73 70 6F 
+              6E 64 73 
+              20 74 6F 
+              00       InitString2
+                               DCB              "Score points by pushing the key that corresponds to",0
+ 1844 000001BD 20 20 20 
+              20 20 74 
+              68 65 20 
+              63 6F 72 
+
+
+
+ARM Macro Assembler    Page 54 
+
+
+              72 65 63 
+              74 20 63 
+              6F 6C 6F 
+              72 20 6F 
+              75 74 70 
+              75 74 65 
+              64 20 6F 
+              6E 20 74 
+              68 65 20 
+              4B 4C 34 
+              36 3A 00 THEGAME1
+                               DCB              "     the correct color outputed on the KL46:",0
+ 1845 000001EA 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              4E 4F 4E 
+              45 20 3D 
+              20 6E 00 THEGAME2
+                               DCB              "                     NONE = n",0
+ 1846 00000208 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 47 
+              52 45 45 
+              4E 20 3D 
+              20 67 00 THEGAME3
+                               DCB              "                    GREEN = g",0
+ 1847 00000226 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 52 45 
+
+
+
+ARM Macro Assembler    Page 55 
+
+
+              44 20 3D 
+              20 72 00 THEGAME4
+                               DCB              "                      RED = r" ,0
+ 1848 00000244 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              42 4F 54 
+              48 20 3D 
+              20 62 00 THEGAME5
+                               DCB              "                     BOTH = b",0
+ 1849 00000262 20 20 20 
+              20 20 20 
+              20 20 20 
+              20 20 20 
+              2D 2D 50 
+              72 65 73 
+              73 20 61 
+              6E 79 20 
+              6B 65 79 
+              20 74 6F 
+              20 62 65 
+              67 69 6E 
+              2D 2D 00 THEGAME6
+                               DCB              "            --Press any key to begin--",0
+ 1850 00000289 47 4F 21 
+              00       GO      DCB              "GO!",0
+ 1851 0000028D         
+ 1852 0000028D         ;>>>>>   end constants here <<<<<
+ 1853 0000028D 00 00 00        ALIGN
+ 1854 00000290         ;****************************************************************
+ 1855 00000290         ;Variables
+ 1856 00000290                 AREA             MyData,DATA,READWRITE
+ 1857 00000000         ;>>>>> begin variables here <<<<<
+ 1858 00000000         
+ 1859 00000000 00 00 00 
+              00       LED_Color
+                               SPACE            4
+ 1860 00000004                 ALIGN
+
+
+
+ARM Macro Assembler    Page 56 
+
+
+ 1861 00000004         
+ 1862 00000004 00 00 00 
+              00       Score   SPACE            4
+ 1863 00000008                 ALIGN
+ 1864 00000008         
+ 1865 00000008 00 00 00 
+              00       Time_Requirment
+                               SPACE            4
+ 1866 0000000C                 ALIGN
+ 1867 0000000C         
+ 1868 0000000C         
+ 1869 0000000C 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00       Random  SPACE            16
+ 1870 0000001C                 ALIGN
+ 1871 0000001C         
+ 1872 0000001C 00 00 00 
+              00       QBuffer SPACE            Q_BUF_SZ
+ 1873 00000020                 ALIGN
+ 1874 00000020 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 QRecord SPACE            Q_REC_SZ
+ 1875 00000032 00 00           ALIGN
+ 1876 00000034         
+ 1877 00000034         
+ 1878 00000034 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 57 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    RxQBuffer
+                               SPACE            TRxQ_BUF_SZ
+ 1879 00000084                 ALIGN
+ 1880 00000084 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 RxQRecord
+                               SPACE            Q_REC_SZ
+ 1881 00000096 00 00           ALIGN
+ 1882 00000098         
+ 1883 00000098         
+ 1884 00000098 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 58 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    TxQBuffer
+                               SPACE            TRxQ_BUF_SZ
+ 1885 000000E8                 ALIGN
+ 1886 000000E8 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 TxQRecord
+                               SPACE            Q_REC_SZ
+ 1887 000000FA 00 00           ALIGN
+ 1888 000000FC         
+ 1889 000000FC 00 00 00 
+              00       Round_Time
+                               SPACE            4
+ 1890 00000100                 ALIGN
+ 1891 00000100 00 00 00 
+              00       Round_Number
+                               SPACE            4
+ 1892 00000104                 ALIGN
+ 1893 00000104         
+ 1894 00000104 00 00 00 
+              00       Round_Number_Prev
+                               SPACE            4
+ 1895 00000108                 ALIGN
+ 1896 00000108 00 00 00 
+              00       LED_Choice
+                               SPACE            4
+ 1897 0000010C                 ALIGN
+ 1898 0000010C 00 00 00 
+
+
+
+ARM Macro Assembler    Page 59 
+
+
+              00       Count   SPACE            4
+ 1899 00000110                 ALIGN
+ 1900 00000110         
+ 1901 00000110 00      RunStopWatch
+                               SPACE            1
+ 1902 00000111 00 00 00        ALIGN
+ 1903 00000114         
+ 1904 00000114 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00       String  SPACE            79
+ 1905 00000163         ;>>>>>   end variables here <<<<<
+ 1906 00000163 00              ALIGN
+ 1907 00000164                 END
+Command Line: --debug --length=49 --width=120 --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=interwork --depend=.\objects\
+exercise13.d -o.\objects\exercise13.o -I"D:\Assembly\Exercise 13\Code 13\RTE" -IC:\Keil_v5\ARM\PACK\Keil\Kinetis_KLxx_DF
+P\1.6.0\Device\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__UVISION_VERSION SETA 515" --predefine="MKL46Z256xxx
+4 SETA 1" --list=.\listings\exercise13.lst Exercise13.s
