@@ -1,0 +1,32 @@
+Cross Section
+		LE	RE	M	DIFF
+---------------------------------------------
+Middile		23	111	66
+Rotated Right	22	95	58
+Rotated Left	33	112	73
+
+
+
+
+STRAIGHT PIECE
+		LE	RE	M	DIFF
+---------------------------------------------
+Straight	27	104	66	77
+LL		53	109	79	56
+RR		24	85	55	60
+
+Rotated Right	25	95	60	70
+Rotated Left	38	110	73	72
+
+
+
+CUREVE PIECE LEFT
+		LE	RE	M	DIFF
+---------------------------------------------
+STRAIGHT	23	107	65	84
+LL		24	110	66	86
+RR		24	64	44	40
+
+Rotated Right	23	99	62	76
+Rotated Left	31	110	70	79
+
