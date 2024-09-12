@@ -1,2 +1,0 @@
-Part D: All 3 quadratic equations seemed to produce accurate results. It
-	appears everything is functioning correctly.

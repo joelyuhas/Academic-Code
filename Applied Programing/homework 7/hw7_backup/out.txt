@@ -1,4 +1,0 @@
-Testing Homework 7 ge1.txt
-Testing Homework 7 ge2.txt
-Testing Homework 7 ge3.txt
-Testing Homework 7 ge4.txt
