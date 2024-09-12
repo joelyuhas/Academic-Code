@@ -1,0 +1,29 @@
+Initialzing
+Reading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Match Found: space
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list

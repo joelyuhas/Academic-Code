@@ -1,0 +1,106 @@
+==3928== Memcheck, a memory error detector
+==3928== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==3928== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==3928== Command: ./TestList ./us-eng-words.txt
+==3928== 
+Initialzing
+Reading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+==3928== 
+==3928== HEAP SUMMARY:
+==3928==     in use at exit: 520 bytes in 2 blocks
+==3928==   total heap usage: 413,183 allocs, 413,181 frees, 58,672,648 bytes allocated
+==3928== 
+==3928== 520 bytes in 2 blocks are definitely lost in loss record 1 of 1
+==3928==    at 0x4A06A2E: malloc (vg_replace_malloc.c:270)
+==3928==    by 0x401205: AddToBackOfLinkedList (in /home/jxy8307/hw4/TestList)
+==3928==    by 0x400AA1: ReadData (in /home/jxy8307/hw4/TestList)
+==3928==    by 0x400BFC: main (in /home/jxy8307/hw4/TestList)
+==3928== 
+==3928== LEAK SUMMARY:
+==3928==    definitely lost: 520 bytes in 2 blocks
+==3928==    indirectly lost: 0 bytes in 0 blocks
+==3928==      possibly lost: 0 bytes in 0 blocks
+==3928==    still reachable: 0 bytes in 0 blocks
+==3928==         suppressed: 0 bytes in 0 blocks
+==3928== 
+==3928== For counts of detected and suppressed errors, rerun with: -v
+==3928== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 8 from 6)
+==3930== Memcheck, a memory error detector
+==3930== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==3930== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==3930== Command: ./TestSearch ./us-eng-words.txt space
+==3930== 
+Initialzing
+Reading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Match Found: space
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+==3930== 
+==3930== HEAP SUMMARY:
+==3930==     in use at exit: 520 bytes in 2 blocks
+==3930==   total heap usage: 413,183 allocs, 413,181 frees, 58,672,648 bytes allocated
+==3930== 
+==3930== 520 bytes in 2 blocks are definitely lost in loss record 1 of 1
+==3930==    at 0x4A06A2E: malloc (vg_replace_malloc.c:270)
+==3930==    by 0x4012ED: AddToBackOfLinkedList (in /home/jxy8307/hw4/TestSearch)
+==3930==    by 0x400AF1: ReadData (in /home/jxy8307/hw4/TestSearch)
+==3930==    by 0x400C5B: main (in /home/jxy8307/hw4/TestSearch)
+==3930== 
+==3930== LEAK SUMMARY:
+==3930==    definitely lost: 520 bytes in 2 blocks
+==3930==    indirectly lost: 0 bytes in 0 blocks
+==3930==      possibly lost: 0 bytes in 0 blocks
+==3930==    still reachable: 0 bytes in 0 blocks
+==3930==         suppressed: 0 bytes in 0 blocks
+==3930== 
+==3930== For counts of detected and suppressed errors, rerun with: -v
+==3930== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 8 from 6)

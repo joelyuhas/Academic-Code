@@ -1,0 +1,75 @@
+
+------------------------------------------------------------------------------
+1. Files were copied with no issue. debugTst had to be set to be executable
+
+2. When runing gdb, the program ran and stopped at line 24, which has the main
+   function declaration. The program was ran using the following command:
+
+	"run --args debugTst divide"
+
+   Next, the "step" command was executed, which resulted in the program
+   saying:
+
+	"Program received signal SIGFPE, Arithmetic exception."
+
+   and then all subsiquent command calls resulted with gdb saying the program
+   no longer exist.This was repeated with the "next" command to see if it
+   would stop before the exception but it did not and the output was the same.
+   The value of "number was gathered using:
+
+	"print number"
+
+   The value of which was 100 before the crash.
+
+  So
+  Line = 24
+  Number = 100
+
+
+3. According to valgrind, 2048 bytes in 1 block are definitely lost due to a
+   memory leak when ran with "memory" at the end.
+
+   when ran with "good". All the blocks are free and there are no memory leaks
+
+4. I was having major issues trying to assign values back to the main DArray.
+   Everytime I tried assigning the payload, i got an error saying "illegal 
+   move". Turns out I was not assigning the malloced pointer back to the
+   DArray and eventually got it working. Spent the most amount of the time
+   working on the homework, working on this.
+
+5.1 Passing in a file as a parameter was actually very easy and didnt take
+    long to figure out.
+
+5.2 Created a nifty mechanism that when the program decets a string that is
+    greater than 255, it will automaticall skip the next string. This is
+    becasue if there is a string greater than 255, then there will always be
+    at least 1 more character that spills over. With this in mind, it makes
+    sense to always skip the character.
+
+5.3 Once the major issue that was discussed up in 4 was addrssed, implementing
+    the first and last 6 was actually very easy. At this point I had a much
+    better grasp on how to handle the pointers and call the enumerations.
+
+5.4 My stderr messages were not printing. Turns out it was becasue I was not
+    flushing them. Fixed the issue and then the rest of this step became very
+    easy.
+
+5.5 This portion was also pretty easy and was easy to test. Nothing too
+    difficult.
+
+5.6 Wrote some pretty thorough stderr items. Hard to test since the malloc
+    needs to not work but i am going to assume it would print similar
+    to all the other stderr messages i already have.
+
+5.7 Program works so 5.7 was also easy.
+
+6. I was able to re-use all of the makefile from homework 1 and change the
+   nessesary variables. Valgrind did in fact take a long time to run, but it
+   was able to run perfectly. The rest of the makefile was easy to implement.
+   It should be noted that I did not put DynamicArrays.c into its own .o file
+   but instead was able to comple both files directly into the executable.
+
+Overall, this assignment was able to give me a REALLY good idea of how
+mallocing, pointers, and referencing works.
+
+------------------------------------------------------------------------------

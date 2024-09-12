@@ -1,0 +1,1773 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;Exercise 06
+    2 00000000         ;****************************************************************
+    3 00000000         ;Exercies 5 which is usesd to demonstrate chrypotographic
+    4 00000000         ;and decifering techniques
+    5 00000000         ;Name:  Joel Yuhas
+    6 00000000         ;Date:  3/10/2016
+    7 00000000         ;Class:  CMPE-250
+    8 00000000         ;Section:  Lab section 2 2:00pm to 3:50pm
+    9 00000000         ;---------------------------------------------------------------
+   10 00000000         ;Keil Template for KL46
+   11 00000000         ;R. W. Melton
+   12 00000000         ;April 3, 2015
+   13 00000000         ;****************************************************************
+   14 00000000         ;Assembler directives
+   15 00000000                 THUMB
+   17 00000000         ;****************************************************************
+   18 00000000         ;Include files
+   19 00000000                 GET              MKL46Z4.s   ;Included by start.s
+   21 00000000         ;****************************************************************
+   22 00000000         ;EQUates
+   23 00000000         ;---------------------------------------------------------------
+   24 00000000         ;NVIC_ICER
+   25 00000000         ;31-00:CLRENA=masks for HW IRQ sources;
+   26 00000000         ;             read:   0 = unmasked;   1 = masked
+   27 00000000         ;             write:  0 = no effect;  1 = mask
+   28 00000000         ;12:UART0 IRQ mask
+   29 00000000 00001000 
+                       NVIC_ICER_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+   30 00000000         ;---------------------------------------------------------------
+   31 00000000         ;NVIC_ICPR
+   32 00000000         ;31-00:CLRPEND=pending status for HW IRQ sources;
+   33 00000000         ;             read:   0 = not pending;  1 = pending
+   34 00000000         ;             write:  0 = no effect;
+   35 00000000         ;                     1 = change status to not pending
+   36 00000000         ;12:UART0 IRQ pending status
+   37 00000000 00001000 
+                       NVIC_ICPR_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+   38 00000000         ;---------------------------------------------------------------
+   39 00000000         ;PORTx_PCRn (Port x pin control register n [for pin n])
+   40 00000000         ;___->10-08:Pin mux control (select 0 to 8)
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   41 00000000         ;Use provided PORT_PCR_MUX_SELECT_2_MASK
+   42 00000000         ;---------------------------------------------------------------
+   43 00000000         ;Port A
+   45 00000000 01000200 
+                       PORT_PCR_SET_PTA1_UART0_RX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   47 00000000 01000200 
+                       PORT_PCR_SET_PTA2_UART0_TX
+                               EQU              (PORT_PCR_ISF_MASK :OR:                                    PORT_PCR_MUX
+_SELECT_2_MASK)
+   48 00000000         ;---------------------------------------------------------------
+   49 00000000         ;SIM_SCGC4
+   50 00000000         ;1->10:UART0 clock gate control (enabled)
+   51 00000000         ;Use provided SIM_SCGC4_UART0_MASK
+   52 00000000         ;---------------------------------------------------------------
+   53 00000000         ;SIM_SCGC5
+   54 00000000         ;1->09:Port A clock gate control (enabled)
+   55 00000000         ;Use provided SIM_SCGC5_PORTA_MASK
+   56 00000000         ;---------------------------------------------------------------
+   57 00000000         ;SIM_SOPT2
+   58 00000000         ;01=27-26:UART0SRC=UART0 clock source select
+   59 00000000         ;         (PLLFLLSEL determines MCGFLLCLK' or MCGPLLCLK/2)
+   60 00000000         ; 1=   16:PLLFLLSEL=PLL/FLL clock select (MCGPLLCLK/2)
+   62 00000000 04000000 
+                       SIM_SOPT2_UART0SRC_MCGPLLCLK
+                               EQU              (1 << SIM_SOPT2_UART0SRC_SHIFT)
+   64 00000000 04010000 
+                       SIM_SOPT2_UART0_MCGPLLCLK_DIV2
+                               EQU              (SIM_SOPT2_UART0SRC_MCGPLLCLK :OR: SIM_SOPT2_PLLFLLSEL_MASK)
+   65 00000000         ;---------------------------------------------------------------
+   66 00000000         ;SIM_SOPT5
+   67 00000000         ; 0->   16:UART0 open drain enable (disabled)
+   68 00000000         ; 0->   02:UART0 receive data select (UART0_RX)
+   69 00000000         ;00->01-00:UART0 transmit data select source (UART0_TX)
+   73 00000000 00010007 
+                       SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+                               EQU              (SIM_SOPT5_UART0ODE_MASK :OR:                                  SIM_SOPT
+5_UART0RXSRC_MASK :OR:                                  SIM_SOPT5_UART0TXSRC_MASK)
+   74 00000000         ;---------------------------------------------------------------
+   75 00000000         ;UART0_BDH
+   76 00000000         ;    0->  7:LIN break detect IE (disabled)
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   77 00000000         ;    0->  6:RxD input active edge IE (disabled)
+   78 00000000         ;    0->  5:Stop bit number select (1)
+   79 00000000         ;00001->4-0:SBR[12:0] (UART0CLK / [9600 * (OSR + 1)]) 
+   80 00000000         ;UART0CLK is MCGPLLCLK/2
+   81 00000000         ;MCGPLLCLK is 96 MHz
+   82 00000000         ;MCGPLLCLK/2 is 48 MHz
+   83 00000000         ;SBR = 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+   84 00000000 00000001 
+                       UART0_BDH_9600
+                               EQU              0x01
+   85 00000000         ;---------------------------------------------------------------
+   86 00000000         ;UART0_BDL
+   87 00000000         ;26->7-0:SBR[7:0] (UART0CLK / [9600 * (OSR + 1)])
+   88 00000000         ;UART0CLK is MCGPLLCLK/2
+   89 00000000         ;MCGPLLCLK is 96 MHz
+   90 00000000         ;MCGPLLCLK/2 is 48 MHz
+   91 00000000         ;SBR = 48 MHz / (9600 * 16) = 312.5 --> 312 = 0x138
+   92 00000000 00000038 
+                       UART0_BDL_9600
+                               EQU              0x38
+   93 00000000         ;---------------------------------------------------------------
+   94 00000000         ;UART0_C1
+   95 00000000         ;0-->7:LOOPS=loops select (normal)
+   96 00000000         ;0-->6:DOZEEN=doze enable (disabled)
+   97 00000000         ;0-->5:RSRC=receiver source select (internal--no effect LOOPS=0)
+   98 00000000         ;0-->4:M=9- or 8-bit mode select 
+   99 00000000         ;        (1 start, 8 data [lsb first], 1 stop)
+  100 00000000         ;0-->3:WAKE=receiver wakeup method select (idle)
+  101 00000000         ;0-->2:IDLE=idle line type select (idle begins after start bit)
+  102 00000000         ;0-->1:PE=parity enable (disabled)
+  103 00000000         ;0-->0:PT=parity type (even parity--no effect PE=0)
+  104 00000000 00000000 
+                       UART0_C1_8N1
+                               EQU              0x00
+  105 00000000         ;---------------------------------------------------------------
+  106 00000000         ;UART0_C2
+  107 00000000         ;0-->7:TIE=transmit IE for TDRE (disabled)
+  108 00000000         ;0-->6:TCIE=transmission complete IE for TC (disabled)
+  109 00000000         ;0-->5:RIE=receiver IE for RDRF (disabled)
+  110 00000000         ;0-->4:ILIE=idle line IE for IDLE (disabled)
+  111 00000000         ;1-->3:TE=transmitter enable (enabled)
+  112 00000000         ;1-->2:RE=receiver enable (enabled)
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  113 00000000         ;0-->1:RWU=receiver wakeup control (normal)
+  114 00000000         ;0-->0:SBK=send break (disabled, normal)
+  115 00000000 0000000C 
+                       UART0_C2_T_R
+                               EQU              (UART0_C2_TE_MASK :OR: UART0_C2_RE_MASK)
+  116 00000000 0000002C 
+                       UART0_C2_T_RI
+                               EQU              (UART0_C2_RIE_MASK :OR: UART0_C2_T_R)
+  117 00000000 000000AC 
+                       UART0_C2_TI_RI
+                               EQU              (UART0_C2_TIE_MASK :OR: UART0_C2_T_RI)
+  118 00000000         ;---------------------------------------------------------------
+  119 00000000         ;UART0_C3
+  120 00000000         ;0-->7:R8T9=9th data bit for receiver (not used M=0)
+  121 00000000         ;           10th data bit for transmitter (not used M10=0)
+  122 00000000         ;0-->6:R9T8=9th data bit for transmitter (not used M=0)
+  123 00000000         ;           10th data bit for receiver (not used M10=0)
+  124 00000000         ;0-->5:TXDIR=UART_TX pin direction in single-wire mode
+  125 00000000         ;            (no effect LOOPS=0)
+  126 00000000         ;0-->4:TXINV=transmit data inversion (not inverted)
+  127 00000000         ;0-->3:ORIE=overrun IE for OR (disabled)
+  128 00000000         ;0-->2:NEIE=noise error IE for NF (disabled)
+  129 00000000         ;0-->1:FEIE=framing error IE for FE (disabled)
+  130 00000000         ;0-->0:PEIE=parity error IE for PF (disabled)
+  131 00000000 00000000 
+                       UART0_C3_NO_TXINV
+                               EQU              0x00
+  132 00000000         ;---------------------------------------------------------------
+  133 00000000         ;UART0_C4
+  134 00000000         ;    0-->  7:MAEN1=match address mode enable 1 (disabled)
+  135 00000000         ;    0-->  6:MAEN2=match address mode enable 2 (disabled)
+  136 00000000         ;    0-->  5:M10=10-bit mode select (not selected)
+  137 00000000         ;01111-->4-0:OSR=over sampling ratio (16)
+  138 00000000         ;               = 1 + OSR for 3 <= OSR <= 31
+  139 00000000         ;               = 16 for 0 <= OSR <= 2 (invalid values)
+  140 00000000 0000000F 
+                       UART0_C4_OSR_16
+                               EQU              0x0F
+  141 00000000 0000000F 
+                       UART0_C4_NO_MATCH_OSR_16
+                               EQU              UART0_C4_OSR_16
+  142 00000000         ;---------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  143 00000000         ;UART0_C5
+  144 00000000         ;  0-->  7:TDMAE=transmitter DMA enable (disabled)
+  145 00000000         ;  0-->  6:Reserved; read-only; always 0
+  146 00000000         ;  0-->  5:RDMAE=receiver full DMA enable (disabled)
+  147 00000000         ;000-->4-2:Reserved; read-only; always 0
+  148 00000000         ;  0-->  1:BOTHEDGE=both edge sampling (rising edge only)
+  149 00000000         ;  0-->  0:RESYNCDIS=resynchronization disable (enabled)
+  150 00000000 00000000 
+                       UART0_C5_NO_DMA_SSR_SYNC
+                               EQU              0x00
+  151 00000000         ;---------------------------------------------------------------
+  152 00000000         ;UART0_S1
+  153 00000000         ;0-->7:TDRE=transmit data register empty flag; read-only
+  154 00000000         ;0-->6:TC=transmission complete flag; read-only
+  155 00000000         ;0-->5:RDRF=receive data register full flag; read-only
+  156 00000000         ;1-->4:IDLE=idle line flag; write 1 to clear (clear)
+  157 00000000         ;1-->3:OR=receiver overrun flag; write 1 to clear (clear)
+  158 00000000         ;1-->2:NF=noise flag; write 1 to clear (clear)
+  159 00000000         ;1-->1:FE=framing error flag; write 1 to clear (clear)
+  160 00000000         ;1-->0:PF=parity error flag; write 1 to clear (clear)
+  161 00000000 0000001F 
+                       UART0_S1_CLEAR_FLAGS
+                               EQU              0x1F
+  162 00000000         ;---------------------------------------------------------------
+  163 00000000         ;UART0_S2
+  164 00000000         ;1-->7:LBKDIF=LIN break detect interrupt flag (clear)
+  165 00000000         ;             write 1 to clear
+  166 00000000         ;1-->6:RXEDGIF=RxD pin active edge interrupt flag (clear)
+  167 00000000         ;              write 1 to clear
+  168 00000000         ;0-->5:(reserved); read-only; always 0
+  169 00000000         ;0-->4:RXINV=receive data inversion (disabled)
+  170 00000000         ;0-->3:RWUID=receive wake-up idle detect
+  171 00000000         ;0-->2:BRK13=break character generation length (10)
+  172 00000000         ;0-->1:LBKDE=LIN break detect enable (disabled)
+  173 00000000         ;0-->0:RAF=receiver active flag; read-only
+  174 00000000 000000C0 
+                       UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+                               EQU              0xC0
+  175 00000000         ;---------------------------------------------------------------
+  176 00000000         
+  177 00000000         
+  178 00000000         
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  179 00000000         
+  180 00000000         
+  181 00000000         
+  182 00000000         ;---------------------------------------------------------------
+  183 00000000         ;NVIC_ICPR
+  184 00000000         ;31-00:CLRPEND=pending status for HW IRQ sources;
+  185 00000000         ;             read:   0 = not pending;  1 = pending
+  186 00000000         ;             write:  0 = no effect;
+  187 00000000         ;                     1 = change status to not pending
+  188 00000000         ;22:PIT IRQ pending status
+  189 00000000         ;12:UART0 IRQ pending status
+  190 00000000 00400000 
+                       NVIC_ICPR_PIT_MASK
+                               EQU              PIT_IRQ_MASK
+  191 00000000         ;---------------------------------------------------------------
+  192 00000000         ;NVIC_IPR0-NVIC_IPR7
+  193 00000000         ;2-bit priority:  00 = highest; 11 = lowest
+  194 00000000         ;--PIT
+  195 00000000 00000000 
+                       PIT_IRQ_PRIORITY
+                               EQU              0
+  196 00000000 00C00000 
+                       NVIC_IPR_PIT_MASK
+                               EQU              (3 << PIT_PRI_POS)
+  197 00000000 00000000 
+                       NVIC_IPR_PIT_PRI_0
+                               EQU              (PIT_IRQ_PRIORITY << UART0_PRI_POS)
+  198 00000000         ;--UART0
+  199 00000000 00000003 
+                       UART0_IRQ_PRIORITY
+                               EQU              3
+  200 00000000 000000C0 
+                       NVIC_IPR_UART0_MASK
+                               EQU              (3 << UART0_PRI_POS)
+  201 00000000 000000C0 
+                       NVIC_IPR_UART0_PRI_3
+                               EQU              (UART0_IRQ_PRIORITY << UART0_PRI_POS)
+  202 00000000         ;---------------------------------------------------------------
+  203 00000000         ;NVIC_ISER
+  204 00000000         ;31-00:SETENA=masks for HW IRQ sources;
+  205 00000000         ;             read:   0 = masked;     1 = unmasked
+  206 00000000         ;             write:  0 = no effect;  1 = unmask
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  207 00000000         ;22:PIT IRQ mask
+  208 00000000         ;12:UART0 IRQ mask
+  209 00000000 00400000 
+                       NVIC_ISER_PIT_MASK
+                               EQU              PIT_IRQ_MASK
+  210 00000000 00001000 
+                       NVIC_ISER_UART0_MASK
+                               EQU              UART0_IRQ_MASK
+  211 00000000         ;---------------------------------------------------------------
+  212 00000000         ;PIT_LDVALn:  PIT load value register n
+  213 00000000         ;31-00:TSV=timer start value (period in clock cycles - 1)
+  214 00000000         ;Clock ticks for 0.01 s at 24 MHz count rate
+  215 00000000         ;0.01 s * 24,000,000 Hz = 240,000
+  216 00000000         ;TSV = 240,000 - 1
+  217 00000000 0003A97F 
+                       PIT_LDVAL_10ms
+                               EQU              239999
+  218 00000000         ;---------------------------------------------------------------
+  219 00000000         ;PIT_MCR:  PIT module control register
+  220 00000000         ;1-->    0:FRZ=freeze (continue'/stop in debug mode)
+  221 00000000         ;0-->    1:MDIS=module disable (PIT section)
+  222 00000000         ;               RTI timer not affected
+  223 00000000         ;               must be enabled before any other PIT setup
+  224 00000000 00000001 
+                       PIT_MCR_EN_FRZ
+                               EQU              PIT_MCR_FRZ_MASK
+  225 00000000         ;---------------------------------------------------------------
+  226 00000000         ;PIT_TCTRLn:  PIT timer control register n
+  227 00000000         ;0-->   2:CHN=chain mode (enable)
+  228 00000000         ;1-->   1:TIE=timer interrupt enable
+  229 00000000         ;1-->   0:TEN=timer enable
+  230 00000000 00000003 
+                       PIT_TCTRL_CH_IE
+                               EQU              (PIT_TCTRL_TEN_MASK :OR: PIT_TCTRL_TIE_MASK)
+  231 00000000         ;---------------------------------------------------------------
+  232 00000000         
+  233 00000000         
+  234 00000000 0000000D 
+                       CR      EQU              0x0D
+  235 00000000 0000000A 
+                       LF      EQU              0x0A
+  236 00000000 0000004F 
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+                       MAX_STRING
+                               EQU              79
+  237 00000000         
+  238 00000000 00000000 
+                       IN_PTR  EQU              0
+  239 00000000 00000004 
+                       OUT_PTR EQU              4
+  240 00000000 00000008 
+                       BUF_STRT
+                               EQU              8
+  241 00000000 0000000C 
+                       BUF_PAST
+                               EQU              12
+  242 00000000 00000010 
+                       BUF_SIZE
+                               EQU              16
+  243 00000000 00000011 
+                       NUM_ENQD
+                               EQU              17
+  244 00000000         
+  245 00000000         
+  246 00000000 00000004 
+                       Q_BUF_SZ
+                               EQU              4
+  247 00000000 00000050 
+                       TRxQ_BUF_SZ
+                               EQU              80
+  248 00000000 00000012 
+                       Q_REC_SZ
+                               EQU              18
+  249 00000000         
+  250 00000000         
+  251 00000000         ;****************************************************************
+  252 00000000         ;Program
+  253 00000000         ;Linker requires Reset_Handler
+  254 00000000                 AREA             MyCode,CODE,READONLY
+  255 00000000                 ENTRY
+  256 00000000                 EXPORT           Reset_Handler
+  257 00000000                 IMPORT           Startup
+  258 00000000         Reset_Handler
+  259 00000000         main
+  260 00000000         ;---------------------------------------------------------------
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  261 00000000         ;Mask interrupts
+  262 00000000 B672            CPSID            I
+  263 00000002         ;KL46 system startup with 48-MHz system clock
+  264 00000002 F7FF FFFE       BL               Startup
+  265 00000006         ;---------------------------------------------------------------
+  266 00000006         ;---------------------- HEADER -------------------------
+  267 00000006         ;Program creates a Queue and has EnQueue and Dequeue functonality
+  268 00000006         ;as well as being able to display help and status tables
+  269 00000006         ;
+  270 00000006         ;these subroutines include but are not limited to
+  271 00000006         ;----------InitQueue
+  272 00000006         ;----------Enqueue
+  273 00000006         ;----------Dequeue
+  274 00000006         ;----------PutNumHex
+  275 00000006         ;----------GetStringSB
+  276 00000006         ;----------PutStringSB
+  277 00000006         ;----------PutNumU
+  278 00000006         ;----------PutChar
+  279 00000006         ;----------GetChar
+  280 00000006         
+  281 00000006         
+  282 00000006         ;-----**NEW**----
+  283 00000006         ;----------UART0_ISR
+  284 00000006         ;----------Init_UART_IRQ
+  285 00000006         ;----------PutNumSB
+  286 00000006         ;
+  287 00000006         ;the program also used a number of other subroutines that allowed it
+  288 00000006         ;to read in the input of the useer
+  289 00000006         
+  290 00000006         
+  291 00000006         ;>>>>> begin main program code <<<<< 
+  292 00000006 F000 F9B6       BL               Init_UART0_IRQ ;initializing UART0
+  293 0000000A         
+  294 0000000A 4830            LDR              R0,=RunStopWatch
+  295 0000000C 2100            MOVS             R1,#0
+  296 0000000E 7001            STRB             R1,[R0,#0]
+  297 00000010         
+  298 00000010 482F            LDR              R0,=Count
+  299 00000012 2100            MOVS             R1,#0
+  300 00000014 6001            STR              R1,[R0,#0]
+  301 00000016         
+  302 00000016 F000 F97E       BL               Init_PIT_IRQ
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+  303 0000001A B662            CPSIE            I
+  304 0000001C         
+  305 0000001C         Loop                                 ;infinite loop 
+  306 0000001C 214F            MOVS             R1,#MAX_STRING ;loading buffer capacity
+  307 0000001E 482D            LDR              R0,=InitString ;loading the initial output of "Type a string command (g,
+                                                            i,l,p):"
+  308 00000020 F000 F94D       BL               PutStringSB
+  309 00000024         
+  310 00000024 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  311 00000026 F000 FA0D       BL               PutChar
+  312 0000002A 200A            MOVS             R0,#LF
+  313 0000002C F000 FA0A       BL               PutChar
+  314 00000030         
+  315 00000030 203E            MOVS             R0,#'>'
+  316 00000032 F000 FA07       BL               PutChar
+  317 00000036         
+  318 00000036         
+  319 00000036 4826            LDR              R0,=Count
+  320 00000038 2100            MOVS             R1,#0
+  321 0000003A 6001            STR              R1,[R0,#0]
+  322 0000003C         
+  323 0000003C         
+  324 0000003C 4823            LDR              R0,=RunStopWatch
+  325 0000003E 2101            MOVS             R1,#1
+  326 00000040 7001            STRB             R1,[R0,#0]
+  327 00000042         
+  328 00000042         
+  329 00000042 214F            MOVS             R1,#MAX_STRING
+  330 00000044 4824            LDR              R0,=String
+  331 00000046 F000 F8FF       BL               GetStringSB ;getting the first user input
+  332 0000004A         
+  333 0000004A         
+  334 0000004A 4A20            LDR              R2,=RunStopWatch
+  335 0000004C 2100            MOVS             R1,#0
+  336 0000004E 7011            STRB             R1,[R2,#0]
+  337 00000050         
+  338 00000050         
+  339 00000050 203C            MOVS             R0,#'<'
+  340 00000052 F000 F9F7       BL               PutChar
+  341 00000056         
+  342 00000056 481E            LDR              R0,=Count
+  343 00000058 6800            LDR              R0,[R0,#0]
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+  344 0000005A F000 F91C       BL               PutNumU
+  345 0000005E         
+  346 0000005E 481F            LDR              R0,=TimeUnit
+  347 00000060 210A            MOVS             R1,#(TimeUnitEnd - TimeUnit)
+  348 00000062 F000 F92C       BL               PutStringSB
+  349 00000066         
+  350 00000066 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  351 00000068 F000 F9EC       BL               PutChar
+  352 0000006C 200A            MOVS             R0,#LF
+  353 0000006E F000 F9E9       BL               PutChar
+  354 00000072         
+  355 00000072 202D            MOVS             R0,#'-'
+  356 00000074 F000 F9E6       BL               PutChar
+  357 00000078 F000 F9E4       BL               PutChar
+  358 0000007C         
+  359 0000007C 4816            LDR              R0,=String
+  360 0000007E 4918            LDR              R1,=Access
+  361 00000080 F000 F844       BL               CompareString
+  362 00000084         
+  363 00000084         
+  364 00000084 D30A            BCC              Correct
+  365 00000086         
+  366 00000086         Fail
+  367 00000086 214F            MOVS             R1,#MAX_STRING ;failure case
+  368 00000088 4816            LDR              R0,=AccessDenined
+  369 0000008A F000 F918       BL               PutStringSB
+  370 0000008E         
+  371 0000008E 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  372 00000090 F000 F9D8       BL               PutChar
+  373 00000094 200A            MOVS             R0,#LF
+  374 00000096 F000 F9D5       BL               PutChar
+  375 0000009A         
+  376 0000009A         
+  377 0000009A E7BF            B                Loop        ;looping forever
+  378 0000009C         
+  379 0000009C         
+  380 0000009C         Correct
+  381 0000009C 480C            LDR              R0,=Count
+  382 0000009E 6800            LDR              R0,[R0,#0]
+  383 000000A0 4917            LDR              R1,=500
+  384 000000A2 4288            CMP              R0,R1
+  385 000000A4 DCEF            BGT              Fail
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+  386 000000A6         
+  387 000000A6 4810            LDR              R0,=AccessGranted
+  388 000000A8 F000 F909       BL               PutStringSB
+  389 000000AC         
+  390 000000AC 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  391 000000AE F000 F9C9       BL               PutChar
+  392 000000B2 200A            MOVS             R0,#LF
+  393 000000B4 F000 F9C6       BL               PutChar
+  394 000000B8         
+  395 000000B8 480C            LDR              R0,=MissionAchomplished
+  396 000000BA F000 F900       BL               PutStringSB
+  397 000000BE         
+  398 000000BE 200D            MOVS             R0,#CR      ;Moves to the new line, all the way to the left
+  399 000000C0 F000 F9C0       BL               PutChar
+  400 000000C4 200A            MOVS             R0,#LF
+  401 000000C6 F000 F9BD       BL               PutChar
+  402 000000CA         
+  403 000000CA E7FE            B                .
+  404 000000CC         
+  405 000000CC         
+  406 000000CC                 ALIGN
+  407 000000CC 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              000001F4 
+              00000000 
+              00000000         LTORG
+  408 0000010C         
+  409 0000010C         
+  410 0000010C         
+  411 0000010C         
+  412 0000010C         ;>>>>> begin subroutine code <<<<<
+
+
+
+ARM Macro Assembler    Page 13 
+
+
+  413 0000010C         ;--------------------------------CompareString--------------------
+  414 0000010C         ;recives R0 and R1
+  415 0000010C         ;compares the strings
+  416 0000010C         CompareString
+  417 0000010C B5FC            PUSH{R2-R7,LR}
+  418 0000010E 2400            MOVS             R4,#0
+  419 00000110 0006            MOVS             R6,R0
+  420 00000112 000D            MOVS             R5,R1
+  421 00000114         
+  422 00000114 F000 F8B5       BL               LengthStringSB
+  423 00000118         
+  424 00000118 0017            MOVS             R7,R2       ;R7 now has length of string in R0
+  425 0000011A 0008            MOVS             R0,R1
+  426 0000011C         
+  427 0000011C F000 F8B1       BL               LengthStringSB
+  428 00000120 0015            MOVS             R5,R2       ;R5 now has length of string in R1
+  429 00000122         
+  430 00000122 0030            MOVS             R0,R6       ;R0 has R0 again
+  431 00000124         ;R1 always has R1
+  432 00000124         
+  433 00000124 42BD            CMP              R5,R7       ;checking if the lengths of the two are equal
+  434 00000126 D107            BNE              Fail_CS     ;if not equal then fail
+  435 00000128         
+  436 00000128         Loop_CS
+  437 00000128         
+  438 00000128 5D02            LDRB             R2,[R0,R4]
+  439 0000012A 5D0B            LDRB             R3,[R1,R4]
+  440 0000012C         
+  441 0000012C         
+  442 0000012C 429A            CMP              R2,R3       ;compare the things loaded
+  443 0000012E D103            BNE              Fail_CS     ;if not eual then fail
+  444 00000130         
+  445 00000130 2A00            CMP              R2,#0       ;checking to see if null terminate
+  446 00000132 D00C            BEQ              Success_CS
+  447 00000134         
+  448 00000134 1C64            ADDS             R4,R4,#1    ;increments counter
+  449 00000136         
+  450 00000136 E7F7            B                Loop_CS
+  451 00000138         
+  452 00000138         
+  453 00000138         Fail_CS
+  454 00000138 000A            MOVS             R2,R1       ;preserving R1
+
+
+
+ARM Macro Assembler    Page 14 
+
+
+  455 0000013A F3EF 8000       MRS              R0,APSR     ;manually sets C flag to set
+  456 0000013E 2120            MOVS             R1,#0x20
+  457 00000140 0609            LSLS             R1,R1,#24
+  458 00000142 4308            ORRS             R0,R0,R1
+  459 00000144 F380 8800       MSR              APSR,R0
+  460 00000148         
+  461 00000148 0030            MOVS             R0,R6       ;converting back
+  462 0000014A 0011            MOVS             R1,R2
+  463 0000014C         
+  464 0000014C         
+  465 0000014C E007            B                Done_CS
+  466 0000014E         
+  467 0000014E         Success_CS
+  468 0000014E F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+  469 00000152 2020            MOVS             R0,#0x20
+  470 00000154 0609            LSLS             R1,R1,#24
+  471 00000156 4388            BICS             R0,R0,R1
+  472 00000158 F380 8800       MSR              APSR,R0
+  473 0000015C         
+  474 0000015C 0030            MOVS             R0,R6       ;converting back
+  475 0000015E         
+  476 0000015E         
+  477 0000015E         
+  478 0000015E         Done_CS
+  479 0000015E BDFC            POP{R2-R7,PC}
+  480 00000160         
+  481 00000160         ;-------------------------------- InitQueue ------------------------------
+  482 00000160         ;initilizes the queue, R1 must be queue record, can be used for multiple
+  483 00000160         ;queues
+  484 00000160         InitQueue
+  485 00000160         
+  486 00000160 B501            PUSH             {R0,LR}
+  487 00000162         
+  488 00000162 6008            STR              R0,[R1,#IN_PTR]
+  489 00000164 6048            STR              R0,[R1,#OUT_PTR]
+  490 00000166 6088            STR              R0,[R1,#BUF_STRT]
+  491 00000168 1880            ADDS             R0,R0,R2
+  492 0000016A 60C8            STR              R0,[R1,#BUF_PAST]
+  493 0000016C 740A            STRB             R2,[R1,#BUF_SIZE]
+  494 0000016E 2000            MOVS             R0,#0
+  495 00000170 7448            STRB             R0,[R1,#NUM_ENQD]
+  496 00000172         
+
+
+
+ARM Macro Assembler    Page 15 
+
+
+  497 00000172 BD01            POP              {R0,PC}
+  498 00000174         
+  499 00000174         
+  500 00000174         ;-------------------------------- DeQueue --------------------------------
+  501 00000174         ;R1 Address of Queue record structure
+  502 00000174         ;C flag succes(0)
+  503 00000174         ;the deuque subrotine, dequeus and advances the pointer
+  504 00000174         DeQueue
+  505 00000174         
+  506 00000174 B5FE            PUSH             {R1-R7,LR}
+  507 00000176         
+  508 00000176 7C4C            LDRB             R4,[R1,#NUM_ENQD] ;loading values
+  509 00000178 680D            LDR              R5,[R1,#IN_PTR]
+  510 0000017A 688E            LDR              R6,[R1,#BUF_STRT]
+  511 0000017C 684F            LDR              R7,[R1,#OUT_PTR]
+  512 0000017E 68CB            LDR              R3,[R1,#BUF_PAST]
+  513 00000180         
+  514 00000180         
+  515 00000180 2C00            CMP              R4,#0       ;checks if size is zero
+  516 00000182 D00F            BEQ              Failed_Dequeue
+  517 00000184 783A            LDRB             R2,[R7,#0]
+  518 00000186         
+  519 00000186 1C7F            ADDS             R7,R7,#1
+  520 00000188 1E64            SUBS             R4,R4,#1
+  521 0000018A         
+  522 0000018A         
+  523 0000018A 744C            STRB             R4,[R1,#NUM_ENQD] ;storing back into loacation
+  524 0000018C 604F            STR              R7,[R1,#OUT_PTR]
+  525 0000018E         
+  526 0000018E 429F            CMP              R7,R3
+  527 00000190 D010            BEQ              InPointer_Bigger2 ;if pointer procgressing past buffer limit,
+  528 00000192         ;then advacne back
+  529 00000192         Done_Success
+  530 00000192 F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+  531 00000196 2020            MOVS             R0,#0x20
+  532 00000198 0609            LSLS             R1,R1,#24
+  533 0000019A 4388            BICS             R0,R0,R1
+  534 0000019C F380 8800       MSR              APSR,R0
+  535 000001A0 0010            MOVS             R0,R2
+  536 000001A2         
+  537 000001A2         DoneD1
+  538 000001A2 BDFE            POP              {R1-R7,PC}
+
+
+
+ARM Macro Assembler    Page 16 
+
+
+  539 000001A4         
+  540 000001A4         Failed_Dequeue
+  541 000001A4         ;Unsuccesfull
+  542 000001A4 F3EF 8000       MRS              R0,APSR     ;manually sets C flag to set
+  543 000001A8 2120            MOVS             R1,#0x20
+  544 000001AA 0609            LSLS             R1,R1,#24
+  545 000001AC 4308            ORRS             R0,R0,R1
+  546 000001AE F380 8800       MSR              APSR,R0
+  547 000001B2 E7F6            B                DoneD1
+  548 000001B4         
+  549 000001B4         InPointer_Bigger2
+  550 000001B4 0037            MOVS             R7,R6       ;manually moving the pointer back to start
+  551 000001B6 604F            STR              R7,[R1,#OUT_PTR]
+  552 000001B8 E7EB            B                Done_Success
+  553 000001BA         
+  554 000001BA         
+  555 000001BA         ;--------------------------------- EnQueue ------------------------------------
+  556 000001BA         ;R0 Character to enqueue
+  557 000001BA         ;R1 Address of Queue record structure
+  558 000001BA         ;C flag succes(0)
+  559 000001BA         ;Enqueues the recived value and advances
+  560 000001BA         Enqueue
+  561 000001BA         
+  562 000001BA B57F            PUSH             {R0-R6,LR}
+  563 000001BC         
+  564 000001BC 7C0B            LDRB             R3,[R1,#BUF_SIZE] ;initializing the queue structure
+  565 000001BE 7C4C            LDRB             R4,[R1,#NUM_ENQD]
+  566 000001C0 680D            LDR              R5,[R1,#IN_PTR]
+  567 000001C2 688E            LDR              R6,[R1,#BUF_STRT]
+  568 000001C4 68CF            LDR              R7,[R1,#BUF_PAST]
+  569 000001C6         
+  570 000001C6         
+  571 000001C6 429C            CMP              R4,R3
+  572 000001C8 D012            BEQ              Failed_Enqueue ;fails if the queue is full
+  573 000001CA 7028            STRB             R0,[R5,#0]  ;stores value
+  574 000001CC 1C6D            ADDS             R5,R5,#1    ;advances counters
+  575 000001CE 1C64            ADDS             R4,R4,#1
+  576 000001D0         
+  577 000001D0 600D            STR              R5,[R1,#IN_PTR] ;stores back
+  578 000001D2 744C            STRB             R4,[R1,#NUM_ENQD]
+  579 000001D4         
+  580 000001D4 42BD            CMP              R5,R7
+
+
+
+ARM Macro Assembler    Page 17 
+
+
+  581 000001D6 D008            BEQ              InPointer_Bigger1 ;if inpointer reaches end of the queue, go back
+  582 000001D8         
+  583 000001D8         Done
+  584 000001D8 F3EF 8000       MRS              R0,APSR     ; sets C flag to clear
+  585 000001DC 2020            MOVS             R0,#0x20
+  586 000001DE 0609            LSLS             R1,R1,#24
+  587 000001E0 4388            BICS             R0,R0,R1
+  588 000001E2 F380 8800       MSR              APSR,R0
+  589 000001E6 2000            MOVS             R0,#0
+  590 000001E8         
+  591 000001E8         
+  592 000001E8 BD7F            POP              {R0-R6,PC}
+  593 000001EA         
+  594 000001EA         InPointer_Bigger1                    ;if the inpointer is bigger, manually set it back
+  595 000001EA 0035            MOVS             R5,R6
+  596 000001EC 600D            STR              R5,[R1,#IN_PTR]
+  597 000001EE E7F3            B                Done
+  598 000001F0         
+  599 000001F0         Failed_Enqueue
+  600 000001F0 F3EF 8000       MRS              R0,APSR     ; manually sets C flag to set
+  601 000001F4 2120            MOVS             R1,#0x20
+  602 000001F6 0609            LSLS             R1,R1,#24
+  603 000001F8 4308            ORRS             R0,R0,R1
+  604 000001FA F380 8800       MSR              APSR,R0
+  605 000001FE BD7F            POP              {R0-R6,PC}
+  606 00000200         
+  607 00000200         
+  608 00000200         
+  609 00000200         ;---------------------------- PutNumHex----------------------
+  610 00000200         ;takes in value at R0
+  611 00000200         ;doesnt output any values
+  612 00000200         ;converts address into hex value, prints to terminal
+  613 00000200         PutNumHex
+  614 00000200 B53F            PUSH             {R0-R5,LR}
+  615 00000202         
+  616 00000202 221C            MOVS             R2,#28      ;defining constants that will need to be added
+  617 00000204 230F            MOVS             R3,#0x0000000F
+  618 00000206 0004            MOVS             R4,R0
+  619 00000208 2508            MOVS             R5,#8
+  620 0000020A         
+  621 0000020A         Loop_PNH
+  622 0000020A         
+
+
+
+ARM Macro Assembler    Page 18 
+
+
+  623 0000020A 40D0            LSRS             R0,R0,R2    ;shifiting by how much we need
+  624 0000020C 4018            ANDS             R0,R3
+  625 0000020E 2809            CMP              R0,#9
+  626 00000210 D908            BLS              Number_PNH  ;checks if number
+  627 00000212 3037            ADDS             R0,R0,#55   ;if not assume its letter
+  628 00000214 F000 F916       BL               PutChar
+  629 00000218 0020            MOVS             R0,R4
+  630 0000021A         
+  631 0000021A 1F12            SUBS             R2,R2,#4    ;incrementing 
+  632 0000021C 1E6D            SUBS             R5,R5,#1
+  633 0000021E 2D00            CMP              R5,#0
+  634 00000220 D009            BEQ              Done_PNH
+  635 00000222 E7F2            B                Loop_PNH
+  636 00000224         
+  637 00000224         
+  638 00000224         
+  639 00000224         Number_PNH
+  640 00000224 3030            ADDS             R0,R0,#0x00000030 ;speical case for number 
+  641 00000226 F000 F90D       BL               PutChar
+  642 0000022A 0020            MOVS             R0,R4
+  643 0000022C         
+  644 0000022C 1F12            SUBS             R2,R2,#4
+  645 0000022E 1E6D            SUBS             R5,R5,#1
+  646 00000230 2D00            CMP              R5,#0
+  647 00000232 D000            BEQ              Done_PNH
+  648 00000234 E7E9            B                Loop_PNH
+  649 00000236         
+  650 00000236         Done_PNH
+  651 00000236 BD3F            POP              {R0-R5,PC}
+  652 00000238         
+  653 00000238         
+  654 00000238         ;---------------------------------PUTNUMSB----------------------------
+  655 00000238         ;takes value from R0
+  656 00000238         ;doesnt output any values except for PSVR
+  657 00000238         ;prints to the terminal the least significant bit
+  658 00000238         PutNumSB
+  659 00000238 B503            PUSH             {R0-R1,LR}
+  660 0000023A 210F            MOVS             R1,#0x0000000F
+  661 0000023C 4008            ANDS             R0,R1
+  662 0000023E F000 F82A       BL               PutNumU
+  663 00000242 F000 F8FF       BL               PutChar
+  664 00000246 BD03            POP              {R0-R1,PC}
+
+
+
+ARM Macro Assembler    Page 19 
+
+
+  665 00000248         
+  666 00000248         ;------------------------------- GETSTRINGSB -------------------------- 
+  667 00000248         ;Recieves address in R0,
+  668 00000248         ;Outputs string to R0
+  669 00000248         ;takes a string that is typed in and then puts into R0
+  670 00000248         GetStringSB
+  671 00000248 B51F            PUSH             { R0 - R4, LR }
+  672 0000024A 2300            MOVS             R3,#0       ;initializing counter
+  673 0000024C 0004            MOVS             R4,R0       ;storing adress
+  674 0000024E 1E49            SUBS             R1,R1,#1    ;subtracting buffer capacity
+  675 00000250         
+  676 00000250         Loop1A                               ;super loop
+  677 00000250 F000 F903       BL               GetChar     ;checking if input is "enter"
+  678 00000254 280D            CMP              R0, #CR
+  679 00000256 D00B            BEQ              Enter       ;branching if it is
+  680 00000258         
+  681 00000258         
+  682 00000258 4299            CMP              R1,R3       ;checking if index = buffer cpacity
+  683 0000025A D004            BEQ              Skip        ;if it is, skip
+  684 0000025C 54E0            STRB             R0,[R4,R3]  ;otherwise store in adress with value (R0) at address (R4) o
+                                                            ffset of increment (R3)
+  685 0000025E 1C5B            ADDS             R3,R3,#1    ;incrementing counter
+  686 00000260         
+  687 00000260         
+  688 00000260 F000 F8F0       BL               PutChar     ;printing it
+  689 00000264 E7F4            B                Loop1A      ;looping almost forever
+  690 00000266         
+  691 00000266         Skip
+  692 00000266 F000 F8F8       BL               GetChar     ;triggered if buffercapacity over limit and ignores everythi
+                                                            ng until enter is hit
+  693 0000026A 280D            CMP              R0, #CR
+  694 0000026C D000            BEQ              Enter
+  695 0000026E E7FA            B                Skip
+  696 00000270         Enter                                ;if enter was hit
+  697 00000270 2000            MOVS             R0,#0       ;storing '0' at end
+  698 00000272 54E0            STRB             R0,[R4,R3]
+  699 00000274 200D            MOVS             R0,#CR      ;printing new line
+  700 00000276 F000 F8E5       BL               PutChar
+  701 0000027A 200A            MOVS             R0,#LF
+  702 0000027C F000 F8E2       BL               PutChar
+  703 00000280 BD1F            POP              { R0 - R4, PC }
+  704 00000282         
+
+
+
+ARM Macro Assembler    Page 20 
+
+
+  705 00000282         
+  706 00000282         ;------------------------------ LENGTHSTRINGSB -------------------------  
+  707 00000282         LengthStringSB
+  708 00000282 B50A            PUSH             { R1, R3, LR }
+  709 00000284         
+  710 00000284 2200            MOVS             R2,#0       ;initializing counter
+  711 00000286         
+  712 00000286         Loop2
+  713 00000286 5C83            LDRB             R3,[R0,R2]  ;loading value in string
+  714 00000288 2B00            CMP              R3,#0       ;checking if '0', if it is, run away
+  715 0000028A D003            BEQ              Ende
+  716 0000028C 428A            CMP              R2, R1      ;checking if counter = buffercapacity, if it does, run away
+  717 0000028E D001            BEQ              Ende
+  718 00000290 1C52            ADDS             R2,R2, #1
+  719 00000292         
+  720 00000292 E7F8            B                Loop2       ;looping almost forver
+  721 00000294         Ende
+  722 00000294         
+  723 00000294 BD0A            POP              { R1, R3, PC }
+  724 00000296         
+  725 00000296         
+  726 00000296         ;---------------------------------- PUTNUMU ------------------------------
+  727 00000296         ;prints the number in decimal form in R0
+  728 00000296         ;does not output any registers
+  729 00000296         PutNumU
+  730 00000296 B507            PUSH             { R0 - R2, LR }
+  731 00000298 2200            MOVS             R2,#0       ;initializng counter
+  732 0000029A         Loop3
+  733 0000029A 0001            MOVS             R1, R0      ;setting up for DIVU (R1 divedend, R0 divider)
+  734 0000029C 200A            MOVS             R0, #10
+  735 0000029E F000 F81B       BL               DIVU        ;calling DIVU
+  736 000002A2 B402            PUSH             {R1}        ;storing in stack because it gets values in revers order
+  737 000002A4 1C52            ADDS             R2,R2,#1
+  738 000002A6 2800            CMP              R0, #0      ;checking done
+  739 000002A8 D000            BEQ              Out         ;if it is, end
+  740 000002AA E7F6            B                Loop3
+  741 000002AC         
+  742 000002AC         Out
+  743 000002AC BC01            POP              {R0}        ;finishing up
+  744 000002AE 1E52            SUBS             R2,R2,#1
+  745 000002B0 3030            ADDS             R0,R0,#'0'
+  746 000002B2 F000 F8C7       BL               PutChar
+
+
+
+ARM Macro Assembler    Page 21 
+
+
+  747 000002B6 2A00            CMP              R2,#0
+  748 000002B8 D000            BEQ              Done4
+  749 000002BA E7F7            B                Out
+  750 000002BC         
+  751 000002BC         Done4
+  752 000002BC BD07            POP              { R0 - R2, PC }
+  753 000002BE         
+  754 000002BE         
+  755 000002BE         ;--------------------------------- PUTSTRINGSB -----------------------------
+  756 000002BE         ;prints the string stored in R0 to terminal
+  757 000002BE         ;does not output any registers
+  758 000002BE         PutStringSB
+  759 000002BE B50F            PUSH             { R0, R1, R2, R3, LR }
+  760 000002C0         
+  761 000002C0 2300            MOVS             R3,#0       ;counter
+  762 000002C2 0002            MOVS             R2,R0       ;R2 gets adress
+  763 000002C4         
+  764 000002C4         Loop4
+  765 000002C4 428B            CMP              R3,R1       ;compares counter with MAX SIZE
+  766 000002C6 D006            BEQ              Ende2
+  767 000002C8         
+  768 000002C8 5CD0            LDRB             R0,[R2,R3]  ;loads value at R2 offset R3 into R0
+  769 000002CA 2800            CMP              R0,#0       ;checks if null terminator
+  770 000002CC D003            BEQ              Ende2
+  771 000002CE         
+  772 000002CE F000 F8B9       BL               PutChar     ;prints
+  773 000002D2 1C5B            ADDS             R3,R3, #1   ;adds to counter
+  774 000002D4         
+  775 000002D4 E7F6            B                Loop4
+  776 000002D6         Ende2
+  777 000002D6         
+  778 000002D6 BD0F            POP              { R0, R1, R2, R3, PC }
+  779 000002D8         
+  780 000002D8         
+  781 000002D8         ;------------------------------------- DIVU --------------------------------
+  782 000002D8         ;takes in Diveded (R1) and Divisor (R0)
+  783 000002D8         ;returns the dividen amount
+  784 000002D8         DIVU
+  785 000002D8         
+  786 000002D8 B404            PUSH             {R2}        ;Pushing R2 to save
+  787 000002DA 2200            MOVS             R2,#0
+  788 000002DC 2800            CMP              R0,#0       ;checks if Divide by zero
+
+
+
+ARM Macro Assembler    Page 22 
+
+
+  789 000002DE D009            BEQ              DIV_BY_ZERO
+  790 000002E0         
+  791 000002E0         
+  792 000002E0         
+  793 000002E0 2900            CMP              R1,#0       ;checks if Dividend is zero
+  794 000002E2 D00F            BEQ              EndIFF
+  795 000002E4         
+  796 000002E4 4281    While   CMP              R1,R0       ;the main loop where Dividen is conitunually subtracted
+  797 000002E6 D302            BLO              Endwhile    ;by the Divider until Dividen is either 0 or less than
+  798 000002E8         ;the Divider... R2 is used as the quotient
+  799 000002E8 1A09            SUBS             R1,R1,R0
+  800 000002EA 1C52            ADDS             R2,R2,#1
+  801 000002EC         
+  802 000002EC E7FA            B                While
+  803 000002EE         Endwhile
+  804 000002EE 0010            MOVS             R0,R2
+  805 000002F0         
+  806 000002F0         
+  807 000002F0 BC04    DIVU_DONE
+                               POP              {R2}        ;DIVU_DONE used when needed to return out of DIVU subroutine
+                                                            
+  808 000002F2         
+  809 000002F2 4770            BX               LR
+  810 000002F4         
+  811 000002F4         
+  812 000002F4 F3EF 8000 
+                       DIV_BY_ZERO
+                               MRS              R0,APSR     ;Divide by zeros manually sets C flag to set
+  813 000002F8 2120            MOVS             R1,#0x20
+  814 000002FA 0609            LSLS             R1,R1,#24
+  815 000002FC 4308            ORRS             R0,R0,R1
+  816 000002FE F380 8800       MSR              APSR,R0
+  817 00000302 E7F5            B                DIVU_DONE
+  818 00000304         
+  819 00000304         
+  820 00000304 F3EF 8000 
+                       EndIFF  MRS              R0,APSR     ;EndIFF manually sets C flag to clear if dividend is 0
+  821 00000308 2020            MOVS             R0,#0x20
+  822 0000030A 0609            LSLS             R1,R1,#24
+  823 0000030C 4388            BICS             R0,R0,R1
+  824 0000030E F380 8800       MSR              APSR,R0
+  825 00000312 2000            MOVS             R0,#0
+
+
+
+ARM Macro Assembler    Page 23 
+
+
+  826 00000314         
+  827 00000314 E7EC            B                DIVU_DONE
+  828 00000316         
+  829 00000316         
+  830 00000316         ;------------------------------------- INIT --------------------------------
+  831 00000316         ;initializes the UART_IRQ
+  832 00000316         ;code taken from lecture
+  833 00000316         ;shown in chunks
+  834 00000316         Init_PIT_IRQ
+  835 00000316         ;enabling pit clock
+  836 00000316 B50F            PUSH             {R0-R3,LR}
+  837 00000318 4854            LDR              R0,=SIM_SCGC6
+  838 0000031A 4955            LDR              R1,=SIM_SCGC6_PIT_MASK
+  839 0000031C 6802            LDR              R2,[R0,#0]
+  840 0000031E 430A            ORRS             R2,R2,R1
+  841 00000320 6002            STR              R2,[R0,#0]
+  842 00000322         
+  843 00000322         ;disabling timer
+  844 00000322 4854            LDR              R0,=PIT_CH0_BASE
+  845 00000324 4954            LDR              R1,=PIT_TCTRL_TEN_MASK
+  846 00000326 6882            LDR              R2,[R0,#PIT_TCTRL_OFFSET]
+  847 00000328 438A            BICS             R2,R2,R1
+  848 0000032A 6082            STR              R2,[R0,#PIT_TCTRL_OFFSET]
+  849 0000032C         
+  850 0000032C         
+  851 0000032C         ;setting pit interrupt priority
+  852 0000032C 4853            LDR              R0,=PIT_IPR
+  853 0000032E 4954            LDR              R1,=NVIC_IPR_PIT_MASK
+  854 00000330 6803            LDR              R3,[R0,#0]
+  855 00000332 438B            BICS             R3,R3,R1
+  856 00000334 6003            STR              R3,[R0,#0]
+  857 00000336 4853            LDR              R0,=NVIC_ICPR
+  858 00000338 4953            LDR              R1,=NVIC_ICPR_PIT_MASK
+  859 0000033A 6001            STR              R1,[R0,#0]
+  860 0000033C         
+  861 0000033C         ;clearing any pending PIT interrupts
+  862 0000033C 4851            LDR              R0,=NVIC_ICPR
+  863 0000033E 4952            LDR              R1,=NVIC_ICPR_PIT_MASK
+  864 00000340 6001            STR              R1,[R0,#0]
+  865 00000342         
+  866 00000342         ;unmaksing PIt interrupts
+  867 00000342 4852            LDR              R0,=NVIC_ISER
+
+
+
+ARM Macro Assembler    Page 24 
+
+
+  868 00000344 4950            LDR              R1,=NVIC_ISER_PIT_MASK
+  869 00000346 6001            STR              R1,[R0,#0]
+  870 00000348         
+  871 00000348         ;enabling pit modual
+  872 00000348 4851            LDR              R0,=PIT_BASE
+  873 0000034A 494B            LDR              R1,=PIT_MCR_EN_FRZ
+  874 0000034C 6001            STR              R1,[R0,#PIT_MCR_OFFSET]
+  875 0000034E         
+  876 0000034E         ;setting interrupt for every 0.001s
+  877 0000034E 4849            LDR              R0,=PIT_CH0_BASE
+  878 00000350 4950            LDR              R1,=PIT_LDVAL_10ms
+  879 00000352 6001            STR              R1,[R0,#PIT_LDVAL_OFFSET]
+  880 00000354         
+  881 00000354         ;enabling PIt timer to channel 0 for interrupts
+  882 00000354 4950            LDR              R1,=PIT_TCTRL_CH_IE
+  883 00000356 6081            STR              R1,[R0,#PIT_TCTRL_OFFSET]
+  884 00000358         
+  885 00000358 BD0F            POP              {R0-R3,PC}
+  886 0000035A         
+  887 0000035A         
+  888 0000035A         
+  889 0000035A         
+  890 0000035A         
+  891 0000035A         ;-----------------------------------PIT-ISR---------------------------------
+  892 0000035A         ;the interrupt handler that is called by the vector table
+  893 0000035A         PIT_ISR
+  894 0000035A B51F            PUSH             {R0-R4,LR}
+  895 0000035C 484F            LDR              R0,=RunStopWatch
+  896 0000035E 7801            LDRB             R1,[R0,#0]
+  897 00000360         
+  898 00000360         IF_PIT
+  899 00000360 2900            CMP              R1,#0
+  900 00000362 D003            BEQ              Done_PIT
+  901 00000364 484E            LDR              R0,=Count
+  902 00000366 6802            LDR              R2,[R0,#0]
+  903 00000368 1C52            ADDS             R2,R2,#1
+  904 0000036A         
+  905 0000036A 6002            STR              R2,[R0,#0]
+  906 0000036C         
+  907 0000036C         Done_PIT
+  908 0000036C         ;Clearing interrupt
+  909 0000036C 4841            LDR              R0,=PIT_CH0_BASE
+
+
+
+ARM Macro Assembler    Page 25 
+
+
+  910 0000036E 4942            LDR              R1,=PIT_TFLG_TIF_MASK
+  911 00000370 60C1            STR              R1,[R0,#PIT_TFLG_OFFSET]
+  912 00000372         
+  913 00000372 BD1F            POP              {R0-R4,PC}
+  914 00000374         
+  915 00000374         
+  916 00000374 BD1F            POP              {R0-R4,PC}
+  917 00000376         
+  918 00000376         ;------------------------------------- INIT --------------------------------
+  919 00000376         ;initializes the UART_IRQ
+  920 00000376         ;code taken from lecture
+  921 00000376         ;shown in chunks
+  922 00000376         Init_UART0_IRQ
+  923 00000376 B50E            PUSH             { R1, R2, R3, LR}
+  924 00000378         ;Select MCGPLLCLK / 2 as UART0 clock source
+  925 00000378 484A            LDR              R0,=SIM_SOPT2
+  926 0000037A 494B            LDR              R1,=SIM_SOPT2_UART0SRC_MASK
+  927 0000037C 6802            LDR              R2,[R0,#0]
+  928 0000037E 438A            BICS             R2,R2,R1
+  929 00000380 494A            LDR              R1,=SIM_SOPT2_UART0_MCGPLLCLK_DIV2
+  930 00000382 430A            ORRS             R2,R2,R1
+  931 00000384 6002            STR              R2,[R0,#0]
+  932 00000386         ;Enable external connection for UART0
+  933 00000386 484A            LDR              R0,=SIM_SOPT5
+  934 00000388 494A            LDR              R1,= SIM_SOPT5_UART0_EXTERN_MASK_CLEAR
+  935 0000038A 6802            LDR              R2,[R0,#0]
+  936 0000038C 438A            BICS             R2,R2,R1
+  937 0000038E 6002            STR              R2,[R0,#0]
+  938 00000390         ;Enable clock for UART0 module
+  939 00000390 4849            LDR              R0,=SIM_SCGC4
+  940 00000392 494A            LDR              R1,= SIM_SCGC4_UART0_MASK
+  941 00000394 6802            LDR              R2,[R0,#0]
+  942 00000396 430A            ORRS             R2,R2,R1
+  943 00000398 6002            STR              R2,[R0,#0]
+  944 0000039A         ;Enable clock for Port A module
+  945 0000039A 4849            LDR              R0,=SIM_SCGC5
+  946 0000039C 4949            LDR              R1,= SIM_SCGC5_PORTA_MASK
+  947 0000039E 6802            LDR              R2,[R0,#0]
+  948 000003A0 430A            ORRS             R2,R2,R1
+  949 000003A2 6002            STR              R2,[R0,#0]
+  950 000003A4         ;Connect PORT A Pin 1 (PTA1) to UART0 Rx (J1 Pin 02)
+  951 000003A4 4848            LDR              R0,=PORTA_PCR1
+
+
+
+ARM Macro Assembler    Page 26 
+
+
+  952 000003A6 4949            LDR              R1,=PORT_PCR_SET_PTA1_UART0_RX
+  953 000003A8 6001            STR              R1,[R0,#0]
+  954 000003AA         ;Connect PORT A Pin 2 (PTA2) to UART0 Tx (J1 Pin 04)
+  955 000003AA 4849            LDR              R0,=PORTA_PCR2
+  956 000003AC 4947            LDR              R1,=PORT_PCR_SET_PTA2_UART0_TX
+  957 000003AE 6001            STR              R1,[R0,#0]
+  958 000003B0         
+  959 000003B0         
+  960 000003B0         ;Disable UART0 receiver and transmitter
+  961 000003B0 4848            LDR              R0,=UART0_BASE
+  962 000003B2 210C            MOVS             R1,#UART0_C2_T_R
+  963 000003B4 78C2            LDRB             R2,[R0,#UART0_C2_OFFSET]
+  964 000003B6 438A            BICS             R2,R2,R1
+  965 000003B8 70C2            STRB             R2,[R0,#UART0_C2_OFFSET]
+  966 000003BA         ;Set UART0 for 9600 baud, 8N1 protocol
+  967 000003BA 2101            MOVS             R1,#UART0_BDH_9600
+  968 000003BC 7001            STRB             R1,[R0,#UART0_BDH_OFFSET]
+  969 000003BE 2138            MOVS             R1,#UART0_BDL_9600
+  970 000003C0 7041            STRB             R1,[R0,#UART0_BDL_OFFSET] ;Somethign on here
+  971 000003C2 2100            MOVS             R1,#UART0_C1_8N1
+  972 000003C4 7081            STRB             R1,[R0,#UART0_C1_OFFSET]
+  973 000003C6 2100            MOVS             R1,#UART0_C3_NO_TXINV
+  974 000003C8 7181            STRB             R1,[R0,#UART0_C3_OFFSET]
+  975 000003CA 210F            MOVS             R1,#UART0_C4_NO_MATCH_OSR_16
+  976 000003CC 7281            STRB             R1,[R0,#UART0_C4_OFFSET]
+  977 000003CE 2100            MOVS             R1,#UART0_C5_NO_DMA_SSR_SYNC
+  978 000003D0 72C1            STRB             R1,[R0,#UART0_C5_OFFSET]
+  979 000003D2 211F            MOVS             R1,#UART0_S1_CLEAR_FLAGS
+  980 000003D4 7101            STRB             R1,[R0,#UART0_S1_OFFSET]
+  982 000003D6 21C0            MOVS             R1,    #UART0_S2_NO_RXINV_BRK10_NO_LBKDETECT_CLEAR_FLAGS
+  983 000003D8 7141            STRB             R1,[R0,#UART0_S2_OFFSET]
+  984 000003DA         ;Enable UART0 receiver and transmitter
+  985 000003DA 212C            MOVS             R1,#UART0_C2_T_RI
+  986 000003DC 70C1            STRB             R1,[R0,#UART0_C2_OFFSET]
+  987 000003DE         
+  988 000003DE 483E            LDR              R0,=RxQBuffer
+  989 000003E0 493E            LDR              R1,=RxQRecord
+  990 000003E2 2250            MOVS             R2,#TRxQ_BUF_SZ
+  991 000003E4 F7FF FEBC       BL               InitQueue
+  992 000003E8         
+  993 000003E8 483D            LDR              R0,=TxQBuffer
+  994 000003EA 493E            LDR              R1,=TxQRecord
+
+
+
+ARM Macro Assembler    Page 27 
+
+
+  995 000003EC 2250            MOVS             R2,#TRxQ_BUF_SZ
+  996 000003EE F7FF FEB7       BL               InitQueue
+  997 000003F2         
+  998 000003F2         ;added for prelab 9
+  999 000003F2         ;Set UART IRQ Priority
+ 1000 000003F2 483D            LDR              R0,=UART0_IPR
+ 1001 000003F4 4A3D            LDR              R2,=NVIC_IPR_UART0_PRI_3
+ 1002 000003F6 6803            LDR              R3,[R0,#0]
+ 1003 000003F8 4313            ORRS             R3,R3,R2
+ 1004 000003FA 6003            STR              R3,[R0,#0]
+ 1005 000003FC         
+ 1006 000003FC         ;clearing pending uart0Interrupts
+ 1007 000003FC 4821            LDR              R0,=NVIC_ICPR
+ 1008 000003FE 493C            LDR              R1,=NVIC_ICPR_UART0_MASK
+ 1009 00000400 6001            STR              R1,[R0,#0]
+ 1010 00000402         
+ 1011 00000402         ;unmaks UART0 interrupts
+ 1012 00000402 4822            LDR              R0,=NVIC_ISER
+ 1013 00000404 493A            LDR              R1,=NVIC_ISER_UART0_MASK
+ 1014 00000406 6001            STR              R1,[R0,#0]
+ 1015 00000408         
+ 1016 00000408         
+ 1017 00000408 BD0E            POP              { R1, R2, R3, PC}
+ 1018 0000040A         ;-----------------------------------UART0-ISR---------------------------------
+ 1019 0000040A         ;the interrupt handler that is called by the vector table
+ 1020 0000040A         UART0_ISR
+ 1021 0000040A B672            CPSID            I
+ 1022 0000040C B5E0            PUSH             {R5-R7, LR}
+ 1023 0000040E         
+ 1024 0000040E 4A31            LDR              R2,=UART0_BASE ;recives the base
+ 1025 00000410 78D1            LDRB             R1,[R2,#UART0_C2_OFFSET]
+ 1026 00000412 2080            MOVS             R0,#UART0_C2_TIE_MASK ;masking
+ 1027 00000414         
+ 1028 00000414 4208            TST              R0,R1       ;testing the value in the offset verses the 
+ 1029 00000416         ;tie mask
+ 1030 00000416 D00B            BEQ              RxInterrupt ;if they equal, then its confimed a Rx interrupt and brankes
+                                                            
+ 1031 00000418 7911            LDRB             R1,[R2,#UART0_S1_OFFSET]
+ 1032 0000041A 2080            MOVS             R0,#UART0_S1_TDRE_MASK ;TDRE mask
+ 1033 0000041C         
+ 1034 0000041C 4208            TST              R0,R1       ;checks again
+ 1035 0000041E         
+
+
+
+ARM Macro Assembler    Page 28 
+
+
+ 1036 0000041E D007            BEQ              RxInterrupt ;if they equal, then its confimed a Rx interrupt and brankes
+                                                            
+ 1037 00000420         
+ 1038 00000420 4930            LDR              R1,=TxQRecord ;if code has lasted this far, then TxQRecord is loaded
+ 1039 00000422         
+ 1040 00000422 F7FF FEA7       BL               DeQueue     ;dequeues
+ 1041 00000426         
+ 1042 00000426 D201            BCS              Else_01     ;if it fails, initiate else
+ 1043 00000428         
+ 1044 00000428 71D0            STRB             R0,[R2,#UART0_D_OFFSET]
+ 1045 0000042A E001            B                RxInterrupt ;goes to RxInterrupt since it has failed
+ 1046 0000042C         
+ 1047 0000042C         
+ 1048 0000042C         Else_01                              ;else loop that branches
+ 1049 0000042C 212C            MOVS             R1,#UART0_C2_T_RI
+ 1050 0000042E 70D1            STRB             R1,[R2,#UART0_C2_OFFSET]
+ 1051 00000430         
+ 1052 00000430         RxInterrupt                          ;Rxinterupt, which is called if it is confimred to be a Rx c
+                                                            ase
+ 1053 00000430         
+ 1054 00000430 7911            LDRB             R1,[R2,#UART0_S1_OFFSET]
+ 1055 00000432 2020            MOVS             R0,#UART0_S1_RDRF_MASK ;masking and so forth
+ 1056 00000434         
+ 1057 00000434 4208            TST              R0,R1
+ 1058 00000436         
+ 1059 00000436 D003            BEQ              Over_ISR
+ 1060 00000438         
+ 1061 00000438 79D0            LDRB             R0,[R2,#UART0_D_OFFSET]
+ 1062 0000043A 4928            LDR              R1,=RxQRecord ;loading RxQrecord and then enquing
+ 1063 0000043C F7FF FEBD       BL               Enqueue
+ 1064 00000440         
+ 1065 00000440         Over_ISR
+ 1066 00000440         
+ 1067 00000440 B662            CPSIE            I           ;stop masking
+ 1068 00000442 BDE0            POP              {R5-R7,PC}
+ 1069 00000444         
+ 1070 00000444         
+ 1071 00000444         
+ 1072 00000444         
+ 1073 00000444         
+ 1074 00000444         ;--------------------------- PUTCHAR -----------------------
+ 1075 00000444         ;Recives R0
+
+
+
+ARM Macro Assembler    Page 29 
+
+
+ 1076 00000444         ;Places it onto termianl screen
+ 1077 00000444         ;does not modify registers
+ 1078 00000444         PutChar
+ 1079 00000444 B50F            PUSH             { R0, R1, R2, R3, LR }
+ 1080 00000446 4927            LDR              R1,=TxQRecord ;loading TxQBuffer
+ 1081 00000448         PC_Loop
+ 1082 00000448 B672            CPSID            I
+ 1083 0000044A F7FF FEB6       BL               Enqueue     ;enquing item in R0
+ 1084 0000044E B662            CPSIE            I
+ 1085 00000450 D2FA            BCS              PC_Loop
+ 1086 00000452         
+ 1087 00000452 4820            LDR              R0,=UART0_BASE
+ 1088 00000454 21AC            MOVS             R1,#UART0_C2_TI_RI
+ 1089 00000456 70C1            STRB             R1,[R0,#UART0_C2_OFFSET]
+ 1090 00000458         
+ 1091 00000458 BD0F            POP              { R0, R1, R2, R3, PC }
+ 1092 0000045A         
+ 1093 0000045A         
+ 1094 0000045A         ;--------------------------- GETCHAR -----------------------
+ 1095 0000045A         ;takes terminal off of screen that has been entered
+ 1096 0000045A         ;places value into R0 register
+ 1097 0000045A         GetChar                              ;copy and paste code of Getchar
+ 1098 0000045A B50E            PUSH             { R1, R2, R3, LR }
+ 1099 0000045C 491F            LDR              R1,=RxQRecord ;loading RxQBuff
+ 1100 0000045E         GC_Loop
+ 1101 0000045E B672            CPSID            I
+ 1102 00000460 F7FF FE88       BL               DeQueue     ;dequeuing from the queue
+ 1103 00000464 B662            CPSIE            I
+ 1104 00000466         
+ 1105 00000466 D2FA            BCS              GC_Loop
+ 1106 00000468         
+ 1107 00000468 BD0E            POP              { R1, R2, R3, PC }
+ 1108 0000046A         
+ 1109 0000046A         
+ 1110 0000046A         ;>>>>>   end subroutine code <<<<<
+ 1111 0000046A 00 00           ALIGN
+ 1112 0000046C         ;****************************************************************
+ 1113 0000046C         ;Vector Table Mapped to Address 0 at Reset
+ 1114 0000046C         ;Linker requires __Vectors to be exported
+ 1115 0000046C 4004803C 
+              00800000 
+              40037100 
+
+
+
+ARM Macro Assembler    Page 30 
+
+
+              00000001 
+              E000E414 
+              00C00000 
+              E000E280 
+              00400000 
+              E000E100 
+              40037000 
+              0003A97F 
+              00000003 
+              00000000 
+              00000000 
+              40048004 
+              0C000000 
+              04010000 
+              40048010 
+              00010007 
+              40048034 
+              00000400 
+              40048038 
+              00000200 
+              40049004 
+              01000200 
+              40049008 
+              4006A000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              E000E40C 
+              000000C0 
+              00001000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         AREA             RESET, DATA, READONLY
+ 1116 00000000                 EXPORT           __Vectors
+ 1117 00000000                 EXPORT           __Vectors_End
+ 1118 00000000                 EXPORT           __Vectors_Size
+ 1119 00000000                 IMPORT           __initial_sp
+ 1120 00000000                 IMPORT           Dummy_Handler
+ 1121 00000000         __Vectors
+ 1122 00000000         ;ARM core vectors
+
+
+
+ARM Macro Assembler    Page 31 
+
+
+ 1123 00000000 00000000        DCD              __initial_sp ;00:end of stack
+ 1124 00000004 00000000        DCD              Reset_Handler ;01:reset vector
+ 1125 00000008 00000000        DCD              Dummy_Handler ;02:NMI
+ 1126 0000000C 00000000        DCD              Dummy_Handler ;03:hard fault
+ 1127 00000010 00000000        DCD              Dummy_Handler ;04:(reserved)
+ 1128 00000014 00000000        DCD              Dummy_Handler ;05:(reserved)
+ 1129 00000018 00000000        DCD              Dummy_Handler ;06:(reserved)
+ 1130 0000001C 00000000        DCD              Dummy_Handler ;07:(reserved)
+ 1131 00000020 00000000        DCD              Dummy_Handler ;08:(reserved)
+ 1132 00000024 00000000        DCD              Dummy_Handler ;09:(reserved)
+ 1133 00000028 00000000        DCD              Dummy_Handler ;10:(reserved)
+ 1134 0000002C 00000000        DCD              Dummy_Handler ;11:SVCall (supervisor call)
+ 1135 00000030 00000000        DCD              Dummy_Handler ;12:(reserved)
+ 1136 00000034 00000000        DCD              Dummy_Handler ;13:(reserved)
+ 1137 00000038 00000000        DCD              Dummy_Handler ;14:PendableSrvReq (pendable request 
+ 1138 0000003C         ;   for system service)
+ 1139 0000003C 00000000        DCD              Dummy_Handler ;15:SysTick (system tick timer)
+ 1140 00000040 00000000        DCD              Dummy_Handler ;16:DMA channel 0 xfer complete/error
+ 1141 00000044 00000000        DCD              Dummy_Handler ;17:DMA channel 1 xfer complete/error
+ 1142 00000048 00000000        DCD              Dummy_Handler ;18:DMA channel 2 xfer complete/error
+ 1143 0000004C 00000000        DCD              Dummy_Handler ;19:DMA channel 3 xfer complete/error
+ 1144 00000050 00000000        DCD              Dummy_Handler ;20:(reserved)
+ 1145 00000054 00000000        DCD              Dummy_Handler ;21:command complete; read collision
+ 1146 00000058 00000000        DCD              Dummy_Handler ;22:low-voltage detect;
+ 1147 0000005C         ;   low-voltage warning
+ 1148 0000005C 00000000        DCD              Dummy_Handler ;23:low leakage wakeup
+ 1149 00000060 00000000        DCD              Dummy_Handler ;24:I2C0
+ 1150 00000064 00000000        DCD              Dummy_Handler ;25:I2C1
+ 1151 00000068 00000000        DCD              Dummy_Handler ;26:SPI0 (all IRQ sources)
+ 1152 0000006C 00000000        DCD              Dummy_Handler ;27:SPI1 (all IRQ sources)
+ 1153 00000070 00000000        DCD              UART0_ISR   ;28:UART0 (status; error)
+ 1154 00000074 00000000        DCD              Dummy_Handler ;29:UART1 (status; error)
+ 1155 00000078 00000000        DCD              Dummy_Handler ;30:UART2 (status; error)
+ 1156 0000007C 00000000        DCD              Dummy_Handler ;31:ADC0
+ 1157 00000080 00000000        DCD              Dummy_Handler ;32:CMP0
+ 1158 00000084 00000000        DCD              Dummy_Handler ;33:TPM0
+ 1159 00000088 00000000        DCD              Dummy_Handler ;34:TPM1
+ 1160 0000008C 00000000        DCD              Dummy_Handler ;35:TPM2
+ 1161 00000090 00000000        DCD              Dummy_Handler ;36:RTC (alarm)
+ 1162 00000094 00000000        DCD              Dummy_Handler ;37:RTC (seconds)
+ 1163 00000098 00000000        DCD              PIT_ISR     ;38:PIT (all IRQ sources)
+ 1164 0000009C 00000000        DCD              Dummy_Handler ;39:I2S0
+
+
+
+ARM Macro Assembler    Page 32 
+
+
+ 1165 000000A0 00000000        DCD              Dummy_Handler ;40:USB0
+ 1166 000000A4 00000000        DCD              Dummy_Handler ;41:DAC0
+ 1167 000000A8 00000000        DCD              Dummy_Handler ;42:TSI0
+ 1168 000000AC 00000000        DCD              Dummy_Handler ;43:MCG
+ 1169 000000B0 00000000        DCD              Dummy_Handler ;44:LPTMR0
+ 1170 000000B4 00000000        DCD              Dummy_Handler ;45:Segment LCD
+ 1171 000000B8 00000000        DCD              Dummy_Handler ;46:PORTA pin detect
+ 1172 000000BC 00000000        DCD              Dummy_Handler ;47:PORTC and PORTD pin detect
+ 1173 000000C0         
+ 1174 000000C0         
+ 1175 000000C0         
+ 1176 000000C0         __Vectors_End
+ 1177 000000C0 000000C0 
+                       __Vectors_Size
+                               EQU              __Vectors_End - __Vectors
+ 1178 000000C0                 ALIGN
+ 1179 000000C0         ;****************************************************************
+ 1180 000000C0         ;Constants
+ 1181 000000C0                 AREA             MyConst,DATA,READONLY
+ 1182 00000000         ;>>>>> begin constants here <<<<<
+ 1183 00000000 45 6E 74 
+              65 72 20 
+              74 68 65 
+              20 61 63 
+              63 65 73 
+              73 20 63 
+              6F 64 65 
+              2E 00    InitString
+                               DCB              "Enter the access code.",0
+ 1184 00000017         
+ 1185 00000017 20 78 20 
+              30 2E 30 
+              31 20 73 
+              00       TimeUnit
+                               DCB              " x 0.01 s",0
+ 1186 00000021         TimeUnitEnd
+ 1187 00000021         
+ 1188 00000021 32 35 30 
+              31 35 31 
+              31 30 00 Access  DCB              "25015110",0
+ 1189 0000002A         
+ 1190 0000002A 41 63 63 
+
+
+
+ARM Macro Assembler    Page 33 
+
+
+              65 73 73 
+              20 64 65 
+              6E 69 65 
+              64 00    AccessDenined
+                               DCB              "Access denied",0
+ 1191 00000038         
+ 1192 00000038 41 63 63 
+              65 73 73 
+              20 67 72 
+              61 6E 74 
+              65 64 00 AccessGranted
+                               DCB              "Access granted",0
+ 1193 00000047         
+ 1194 00000047 4D 69 73 
+              73 69 6F 
+              6E 20 63 
+              6F 6D 70 
+              6C 65 74 
+              65 64 21 
+              00       MissionAchomplished
+                               DCB              "Mission completed!",0
+ 1195 0000005A         
+ 1196 0000005A 64 20 28 
+              64 65 71 
+              75 65 75 
+              65 29 2C 
+              20 65 20 
+              28 65 6E 
+              71 75 65 
+              75 65 29 
+              2C 20 68 
+              20 28 68 
+              65 6C 70 
+              29 2C 20 
+              70 20 28 
+              70 72 69 
+              6E 74 29 
+              2C 20 73 
+              20 28 73 
+              74 61 74 
+              75 73 29 
+              00       Help    DCB              "d (dequeue), e (enqueue), h (help), p (print), s (status)",0
+
+
+
+ARM Macro Assembler    Page 34 
+
+
+ 1197 00000094         
+ 1198 00000094 20 4F 75 
+              74 3D 30 
+              78 00    OUT     DCB              " Out=0x",0
+ 1199 0000009C         
+ 1200 0000009C 4C 65 6E 
+              67 74 68 
+              3A 00    Length  DCB              "Length:",0
+ 1201 000000A4         
+ 1202 000000A4 20 4E 75 
+              6D 3D 00 Num     DCB              " Num=",0
+ 1203 000000AA         
+ 1204 000000AA 43 68 61 
+              72 61 63 
+              74 65 72 
+              20 74 6F 
+              20 65 6E 
+              71 75 65 
+              75 65 3A 
+              00       CTE     DCB              "Character to enqueue:",0
+ 1205 000000C0         
+ 1206 000000C0 3A 20 20 
+              20 20 20 
+              20 20 20 
+              00       DQGDS   DCB              ":        ",0
+ 1207 000000CA         ;>>>>>   end constants here <<<<<
+ 1208 000000CA 00 00           ALIGN
+ 1209 000000CC         ;****************************************************************
+ 1210 000000CC         ;Variables
+ 1211 000000CC                 AREA             MyData,DATA,READWRITE
+ 1212 00000000         ;>>>>> begin variables here <<<<<
+ 1213 00000000         
+ 1214 00000000         
+ 1215 00000000 00 00 00 
+              00       QBuffer SPACE            Q_BUF_SZ
+ 1216 00000004                 ALIGN
+ 1217 00000004 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 QRecord SPACE            Q_REC_SZ
+
+
+
+ARM Macro Assembler    Page 35 
+
+
+ 1218 00000016 00 00           ALIGN
+ 1219 00000018         
+ 1220 00000018         
+ 1221 00000018 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    RxQBuffer
+                               SPACE            TRxQ_BUF_SZ
+ 1222 00000068                 ALIGN
+ 1223 00000068 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 RxQRecord
+                               SPACE            Q_REC_SZ
+ 1224 0000007A 00 00           ALIGN
+ 1225 0000007C         
+ 1226 0000007C         
+
+
+
+ARM Macro Assembler    Page 36 
+
+
+ 1227 0000007C 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    TxQBuffer
+                               SPACE            TRxQ_BUF_SZ
+ 1228 000000CC                 ALIGN
+ 1229 000000CC 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 TxQRecord
+                               SPACE            Q_REC_SZ
+ 1230 000000DE 00 00           ALIGN
+ 1231 000000E0         
+ 1232 000000E0         
+ 1233 000000E0 00 00 00 
+              00       Count   SPACE            4
+ 1234 000000E4                 ALIGN
+
+
+
+ARM Macro Assembler    Page 37 
+
+
+ 1235 000000E4         
+ 1236 000000E4 00      RunStopWatch
+                               SPACE            1
+ 1237 000000E5 00 00 00        ALIGN
+ 1238 000000E8         
+ 1239 000000E8 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00       String  SPACE            79
+ 1240 00000137         ;>>>>>   end variables here <<<<<
+ 1241 00000137 00              ALIGN
+ 1242 00000138                 END
+Command Line: --debug --length=49 --width=120 --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=interwork --depend=".\objects
+\exercise 10.d" -o".\objects\exercise 10.o" -I"D:\Assembly\Exercise 10\RTE" -IC:\Keil_v5\ARM\PACK\Keil\Kinetis_KLxx_DFP\
+1.6.0\Device\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__UVISION_VERSION SETA 515" --predefine="MKL46Z256xxx4 
+SETA 1" --list=.\listings\exercise 10.lst "Exercise 10.s"

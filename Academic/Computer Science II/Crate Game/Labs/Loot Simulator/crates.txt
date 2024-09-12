@@ -1,0 +1,52 @@
+literally-impossible	40 3	999         18000
+inconsivibly-rare		15 3	745         17000
+legendarily-exotic		10 3	530         16000
+mega-exotic			    8 3	    462         15000
+exotic				    6 3	    405         14000
+mytic-platinum			5 3	    310          13000
+platinum			    4 3	    258          12000
+uncommon-platium		3 3		202          11000
+tarnished-platuim		3 3		188          10000
+ultra-mythic			3 3		163          9000
+mythic				    3 3		140          8000
+true-legendary			3 3		120          7000
+legendary			    3 3		100          6000
+barely-legendary		3 3		96          5000
+extremely-exceptional	3 3	    88          4000
+very-excpetional		3 3		75		3507.99
+exceptional			    3 3		57		2063.46
+very-rare			    3 2		48		1213.99
+slitely-more-rare		3 2		36		713.99
+rare				    3 2 	29		419.99
+fairl-rare			    3 2		24		246.99
+semi-rare			    3 1		19		144.99
+uncommmon			    2 1		15		84.99
+slitley-uncommon		2 1		12		49.99
+common				    2 1		10		29.99
+extremley-common		2 1		5		16.99
+Vendor-trash            2 1     2		9.99
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

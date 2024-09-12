@@ -1,0 +1,207 @@
+Elapsed CPU time (timerRead) = 0.12 sec.
+Elapsed CPU time (timerSearchLL) = 1.75 sec.
+Elapsed CPU time (timerSearchLL, 200) = 8.750000e-03 sec.
+Elapsed CPU time (timerSearchDA) = 1.4 sec.
+Elapsed CPU time (timerSearchDA, 200) = 7.000000e-03 sec.
+Elapsed CPU time (timerRead) = 0.15 sec.
+Elapsed CPU time (timerSearchLL) = 1.66 sec.
+Elapsed CPU time (timerSearchLL, 200) = 8.300000e-03 sec.
+Elapsed CPU time (timerSearchDA) = 1.41 sec.
+Elapsed CPU time (timerSearchDA, 200) = 7.050000e-03 sec.
+Elapsed CPU time (timerRead) = 0.33 sec.
+Elapsed CPU time (timerSearchLL) = 1.77 sec.
+Elapsed CPU time (timerSearchLL, 200) = 8.850000e-03 sec.
+Elapsed CPU time (timerSearchDA) = 1.48 sec.
+Elapsed CPU time (timerSearchDA, 200) = 7.400000e-03 sec.
+Elapsed CPU time (timerRead) = 0.34 sec.
+Elapsed CPU time (timerSearchLL) = 1.69 sec.
+Elapsed CPU time (timerSearchLL, 200) = 8.450000e-03 sec.
+Elapsed CPU time (timerSearchDA) = 1.46 sec.
+Elapsed CPU time (timerSearchDA, 200) = 7.300000e-03 sec.
+Elapsed CPU time (timerRead) = 0.35 sec.
+Elapsed CPU time (timerSearchLL) = 1.65 sec.
+Elapsed CPU time (timerSearchLL, 200) = 8.250000e-03 sec.
+Elapsed CPU time (timerSearchDA) = 1.55 sec.
+Elapsed CPU time (timerSearchDA, 200) = 7.750000e-03 sec.
+Elapsed CPU time (timerMain) = 17.2 sec.
+Elapsed CPU time (timerMain, 5) = 3.440000e+00 sec.
+
+--------------------- Test 0 -------------------
+
+Initialzing
+Initializing ArrayReading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Calling Linked List Search
+Match found: space
+Calling Dynamic Array Search
+Match Found: space
+
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+
+--------------------- Test 1 -------------------
+
+Initialzing
+Initializing ArrayReading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Calling Linked List Search
+Match found: space
+Calling Dynamic Array Search
+Match Found: space
+
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+
+--------------------- Test 2 -------------------
+
+Initialzing
+Initializing ArrayReading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Calling Linked List Search
+Match found: space
+Calling Dynamic Array Search
+Match Found: space
+
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+
+--------------------- Test 3 -------------------
+
+Initialzing
+Initializing ArrayReading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Calling Linked List Search
+Match found: space
+Calling Dynamic Array Search
+Match Found: space
+
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list
+
+--------------------- Test 4 -------------------
+
+Initialzing
+Initializing ArrayReading
+Closing
+First 6 words in linked list:
+
+1: dermatitis
+2: toxins
+3: wisted
+4: benedictions
+5: Tera
+6: petrochemistry's
+
+Last 6 words in linked list:
+
+206590: besotting
+206589: pressurize
+206588: intercohort
+206587: Sidman's
+206586: Pict's
+206585: harken
+
+Number of words: 206590 
+The word being searched for is: space
+Calling Linked List Search
+Match found: space
+Calling Dynamic Array Search
+Match Found: space
+
+Remove from front of list, new front is: toxins 
+Removed value is: dermatitis 
+Remove from back of list, new back is: pressurize 
+Removed value is: besotting 
+Destroying the linked list

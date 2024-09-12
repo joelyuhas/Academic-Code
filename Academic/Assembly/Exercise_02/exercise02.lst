@@ -1,0 +1,499 @@
+
+
+
+ARM Macro Assembler    Page 1 Program Title for Listing Header Goes Here
+
+
+    1 00000000                 TTL              Program Title for Listing Header Goes Here
+    2 00000000         ;****************************************************************
+    3 00000000         ;Descriptive comment header goes here.
+    4 00000000         ;(What does the program do?)
+    5 00000000         ;Name:  Joel Yuhas
+    6 00000000         ;Date:  2/4/2016
+    7 00000000         ;Class:  CMPE-250
+    8 00000000         ;Section:  Lab 2, thursday, 2:00-3:50
+    9 00000000         ;---------------------------------------------------------------
+   10 00000000         ;Keil Simulator Template for KL46
+   11 00000000         ;R. W. Melton
+   12 00000000         ;January 23, 2015
+   13 00000000         ;****************************************************************
+   14 00000000         ;Assembler directives
+   15 00000000                 THUMB
+   17 00000000         ;****************************************************************
+   18 00000000         ;EQUates
+   19 00000000 00000002 
+                       DIV4    EQU              2
+   20 00000000 00000003 
+                       MULT8   EQU              3
+   21 00000000         ;Vectors
+   22 00000000 000000C0 
+                       VECTOR_TABLE_SIZE
+                               EQU              0x000000C0
+   23 00000000 00000004 
+                       VECTOR_SIZE
+                               EQU              4           ;Bytes per vector
+   24 00000000         ;Stack
+   25 00000000 00000100 
+                       SSTACK_SIZE
+                               EQU              0x00000100
+   26 00000000         ;****************************************************************
+   27 00000000         ;Program
+   28 00000000         ;Linker requires Reset_Handler
+   29 00000000                 AREA             MyCode,CODE,READONLY
+   30 00000000                 ENTRY
+   31 00000000                 EXPORT           Reset_Handler
+   32 00000000         Reset_Handler
+   33 00000000         main
+   34 00000000         ;---------------------------------------------------------------
+   35 00000000         ;>>>>> begin main program code <<<<<
+
+
+
+ARM Macro Assembler    Page 2 Program Title for Listing Header Goes Here
+
+
+   36 00000000 2000            MOVS             R0,#0       ; 0
+   37 00000002 1F40            SUBS             R0,R0,5     ; -5
+   38 00000004 213E            MOVS             R1,#62      ; 62
+   39 00000006 1840            ADDS             R0,R0,R1    ; R0 = -5 + 62
+   40 00000008         
+   41 00000008 2109            MOVS             R1,#9       ; 9
+   42 0000000A 1089            ASRS             R1,R1,#DIV4 ; 9 / 4
+   43 0000000C 1A40            SUBS             R0,R0,R1    ; (-5 + 62) - (9/4)
+   44 0000000E         
+   45 0000000E 2107            MOVS             R1,#7       ; 7
+   46 00000010 00C9            LSLS             R1,R1,#MULT8 ; 7 x 8
+   47 00000012 1DC9            ADDS             R1,R1,#7    ; 7 + 7 (so 7 * 9)
+   48 00000014 1A40            SUBS             R0,R0,R1    ; ((-5 + 62) - (9/4)) - (7 x 9)
+   49 00000016         
+   50 00000016 213A            MOVS             R1,#58      ; 58
+   51 00000018 1840            ADDS             R0,R0,R1    ; (((-5 + 62) - (9/4)) - (7 x 9)) +58
+   52 0000001A         
+   53 0000001A         
+   54 0000001A 2111            MOVS             R1,#17      ; 17
+   55 0000001C 1840            ADDS             R0,R0,R1    ; ((((-5 + 62) - (9/4)) - (7 x 9)) +58) + 17
+   56 0000001E         
+   57 0000001E         
+   58 0000001E         
+   59 0000001E         
+   60 0000001E         
+   61 0000001E         
+   62 0000001E         
+   63 0000001E         
+   64 0000001E         
+   65 0000001E         
+   66 0000001E         
+   67 0000001E         
+   68 0000001E         ;>>>>>   end main program code <<<<<
+   69 0000001E         ;Stay here
+   70 0000001E E7FE            B                .
+   71 00000020         ;---------------------------------------------------------------
+   72 00000020         ;>>>>> begin subroutine code <<<<<
+   73 00000020         ;>>>>>   end subroutine code <<<<<
+   74 00000020                 ALIGN
+   75 00000020         ;****************************************************************
+   76 00000020         ;Vector Table Mapped to Address 0 at Reset
+   77 00000020         ;Linker requires __Vectors to be exported
+
+
+
+ARM Macro Assembler    Page 3 Program Title for Listing Header Goes Here
+
+
+   78 00000020                 AREA             RESET, DATA, READONLY
+   79 00000000                 EXPORT           __Vectors
+   80 00000000                 EXPORT           __Vectors_End
+   81 00000000                 EXPORT           __Vectors_Size
+   82 00000000         __Vectors
+   83 00000000         ;ARM core vectors
+   84 00000000 00000000        DCD              __initial_sp ;00:end of stack
+   85 00000004 00000000        DCD              Reset_Handler ;reset vector
+   86 00000008 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 4 Program Title for Listing Header Goes Here
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00               SPACE            (VECTOR_TABLE_SIZE - (2 * VECTOR_SIZE))
+   87 000000C0         __Vectors_End
+   88 000000C0 000000C0 
+                       __Vectors_Size
+                               EQU              __Vectors_End - __Vectors
+   89 000000C0                 ALIGN
+   90 000000C0         ;****************************************************************
+   91 000000C0         ;Constants
+   92 000000C0                 AREA             MyConst,DATA,READONLY
+   93 00000000         ;>>>>> begin constants here <<<<<
+   94 00000000         ;>>>>>   end constants here <<<<<
+   95 00000000         ;****************************************************************
+   96 00000000                 AREA             |.ARM.__at_0x1FFFE000|,DATA,READWRITE,ALIGN=3
+   97 00000000                 EXPORT           __initial_sp
+   98 00000000         ;Allocate system stack
+
+
+
+ARM Macro Assembler    Page 5 Program Title for Listing Header Goes Here
+
+
+   99 00000000                 IF               :LNOT::DEF:SSTACK_SIZE
+  101                          ENDIF
+  102 00000000 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 6 Program Title for Listing Header Goes Here
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 7 Program Title for Listing Header Goes Here
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00       Stack_Mem
+                               SPACE            SSTACK_SIZE
+  103 00000100         __initial_sp
+  104 00000100         ;****************************************************************
+  105 00000100         ;Variables
+  106 00000100                 AREA             MyData,DATA,READWRITE
+  107 00000000         ;>>>>> begin variables here <<<<<
+  108 00000000         ;>>>>>   end variables here <<<<<
+  109 00000000                 END
+Command Line: --debug --xref --length=49 --width=120 --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=interwork --depend=.\o
+bjects\exercise02.d -o.\objects\exercise02.o -I"C:\Users\jxy8307\Documents\My Documents\RTE" -IC:\Keil_v5\ARM\PACK\Keil\
+Kinetis_KLxx_DFP\1.6.0\Device\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__UVISION_VERSION SETA 515" --predefin
+e="MKL46Z256xxx4 SETA 1" --list=.\listings\exercise02.lst Exercise02.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+MyCode 00000000
+
+Symbol: MyCode
+   Definitions
+      At line 29 in file Exercise02.s
+   Uses
+      None
+Comment: MyCode unused
+Reset_Handler 00000000
+
+Symbol: Reset_Handler
+   Definitions
+      At line 32 in file Exercise02.s
+   Uses
+      At line 31 in file Exercise02.s
+      At line 85 in file Exercise02.s
+
+main 00000000
+
+Symbol: main
+   Definitions
+      At line 33 in file Exercise02.s
+   Uses
+      None
+Comment: main unused
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 78 in file Exercise02.s
+   Uses
+      None
+Comment: RESET unused
+__Vectors 00000000
+
+Symbol: __Vectors
+   Definitions
+      At line 82 in file Exercise02.s
+   Uses
+      At line 79 in file Exercise02.s
+      At line 88 in file Exercise02.s
+
+__Vectors_End 000000C0
+
+Symbol: __Vectors_End
+   Definitions
+      At line 87 in file Exercise02.s
+   Uses
+      At line 80 in file Exercise02.s
+      At line 88 in file Exercise02.s
+
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+MyConst 00000000
+
+Symbol: MyConst
+   Definitions
+      At line 92 in file Exercise02.s
+   Uses
+      None
+Comment: MyConst unused
+1 symbol
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.ARM.__at_0x1FFFE000 00000000
+
+Symbol: .ARM.__at_0x1FFFE000
+   Definitions
+      At line 96 in file Exercise02.s
+   Uses
+      None
+Comment: .ARM.__at_0x1FFFE000 unused
+Stack_Mem 00000000
+
+Symbol: Stack_Mem
+   Definitions
+      At line 102 in file Exercise02.s
+   Uses
+      None
+Comment: Stack_Mem unused
+__initial_sp 00000100
+
+Symbol: __initial_sp
+   Definitions
+      At line 103 in file Exercise02.s
+   Uses
+      At line 84 in file Exercise02.s
+      At line 97 in file Exercise02.s
+
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+MyData 00000000
+
+Symbol: MyData
+   Definitions
+      At line 106 in file Exercise02.s
+   Uses
+      None
+Comment: MyData unused
+1 symbol
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+DIV4 00000002
+
+Symbol: DIV4
+   Definitions
+      At line 19 in file Exercise02.s
+   Uses
+      At line 42 in file Exercise02.s
+Comment: DIV4 used once
+MULT8 00000003
+
+Symbol: MULT8
+   Definitions
+      At line 20 in file Exercise02.s
+   Uses
+      At line 46 in file Exercise02.s
+Comment: MULT8 used once
+SSTACK_SIZE 00000100
+
+Symbol: SSTACK_SIZE
+   Definitions
+      At line 25 in file Exercise02.s
+   Uses
+      At line 102 in file Exercise02.s
+Comment: SSTACK_SIZE used once
+VECTOR_SIZE 00000004
+
+Symbol: VECTOR_SIZE
+   Definitions
+      At line 23 in file Exercise02.s
+   Uses
+      At line 86 in file Exercise02.s
+Comment: VECTOR_SIZE used once
+VECTOR_TABLE_SIZE 000000C0
+
+Symbol: VECTOR_TABLE_SIZE
+   Definitions
+      At line 22 in file Exercise02.s
+   Uses
+      At line 86 in file Exercise02.s
+Comment: VECTOR_TABLE_SIZE used once
+__Vectors_Size 000000C0
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+Symbol: __Vectors_Size
+   Definitions
+      At line 88 in file Exercise02.s
+   Uses
+      At line 81 in file Exercise02.s
+Comment: __Vectors_Size used once
+6 symbols
+349 symbols in table

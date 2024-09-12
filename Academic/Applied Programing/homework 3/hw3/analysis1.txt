@@ -1,0 +1,125 @@
+------------------------------------------------------------------------------
+Homework 3
+Analysis1.txt
+Joel Yuhas
+3/5/18
+
+For analysis of un-optomized code.
+------------------------------------------------------------------------------
+First, I had to determine where the optimal location for the Macros should be.
+So far I have 3 locations. One for the total code, one outisde the AddPoint
+function, before the while, and another directly before and after the 
+Coefficent function.
+
+I tried to put a timer directly before and after the AddPoint funciton, but
+realized it was in the while loop, so it was printing out the values an
+excessive amount of times.
+
+Currently, im not sure If I should loop the whole program for the data input.
+The reason being is that my calc timers are inside of the whole program 
+timing base, so it would cause them to print a number of times. Also, I could
+simply re-run the test and it would have the same effect
+
+
+
+
+Have been fine tuning the macro placements. Decided to go with 3 locations
+and 3 timers. The first starts as soon as the program starts and measures
+the whole execution. This one loops 5 times. (timerMain)
+
+The next one is designed to get the data input sections. For this, the
+fclose(had to be moved so that this timer could measure the opening,
+reading, and closing of the file without interfering with the coefficents
+calculations. (timerData)
+
+The last one measures the caluclations and the Calcuate Coefficents section.
+(timer Calc)
+
+So far from the data i have been running when i multiply the for loop value
+by two, the time per loop stays the same, which is a sign it is working 
+correctly.
+
+Also have spent some time formatting to make sure that data looks nice.
+
+
+
+Ran into a segmentation fault issue where i was freeing the data in the loop.
+At first i didnt see how it was an issue, but then i realized its because
+it is doing dynamic allocing, so when it was freeing it it was destroying
+all the previouse data. Got it working now and now got the cpp code working
+too. The one thing that should be noted about the cpp code is that the timer
+macro for the calculations were placed in the calculation function while
+in c they were placed around the calcualtion call.
+
+
+
+TESTING
+------------------------------------------------------------------------------
+
+
+
+Eventually, once the macros were set up, the code was insturmented, and 
+some preliminary test were ran to make sure the code output was not
+negativly affected and that the proper items were being timed correctly,
+the test, evaluating the C and C++ code was ran for real.
+
+SPEED
+------------------------------------------------------------------------------
+
+Each program was ran 5 times, the data reading section was ran 5 times, and
+the calculations were ran 10,000 times.
+
+The c program was very consistent with aprox:
+	0.072 sec for data reading per iteration
+	0.000032 sec for calculations per iteration
+
+The average exucution time overall was:
+	0.36 for data reading
+	0.32 for calcualtions, with major outlier of #2 (.43)
+
+there was one outlier for the second of the 5 test, which was 0.086 for data
+reading, 0.01 above the average. The calcualtions were very consistend and
+withing 0.000001 of eachother.
+
+The cpp program was also largely consistent, with aprox:
+	0.002 for data reading per iteration.
+	0.00004 for calcualtions per iteration.
+
+The average execution time overall was:
+	0.02 for data reading
+	0.94 for calculations, with a major outlier of #2 (1.33)
+
+there was a noticable drop in time as the program progressed through
+iterations for the cpp code. it is unsure why as to how this was.
+
+Overall, it can be seen that the cpp program was able to peform signifcantly
+better on the data reading portion while it perfomred similarly in the 
+computation section. This is somewhat expected as the way the programs
+handle memory managment is different but the calculation operations are very
+similar.
+
+SIZE
+------------------------------------------------------------------------------
+
+The c code was also a size of	: 7679
+While the cpp was a size of	: 8577
+
+While the c executable was 	: 11920
+and the cpp excutable was	: 24062
+
+This shows that the c executable was smaller by almost a half. This
+could be due to the fact tha c does not handle its own memore allocations
+amoung other things. Therefore, the c code may have less overhead and behind
+the scene items going on which would pad the executable size.
+
+
+
+**NOTE
+It should be noted that the optomized code output was left in the output
+so the makefile could remain as consistant as possible. However this was
+dummy code and had not been updated yet.
+
+It should also be noted that these were all compiled with -O0 as well since
+ony the default code was being tested and analyzed and was not being optomized
+yet.
+------------------------------------------------------------------------------

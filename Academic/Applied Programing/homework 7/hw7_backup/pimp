@@ -1,0 +1,7 @@
+gedit Makefile &
+gedit apmatrix.c &
+gedit apmatrix.h &
+gedit gsl_example.c &
+gedit gsl_test.c &
+gedit hw7.c &
+gedit Timers.h &

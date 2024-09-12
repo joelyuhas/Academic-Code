@@ -1,0 +1,117 @@
+------------------------------------------------------------------------------
+Homework 3
+Analysis2.txt
+Joel Yuhas
+3/5/18
+
+For analysis of the optomized C program for speed and size
+------------------------------------------------------------------------------
+**NOTE
+It should be noted that the Makefile was modified for the optomized section so
+that the outputs would go to ls2.txt and size2.txt
+
+Each change was test compiled with O0, O1, O2, and O3 respectivly.
+
+
+In order to optomize the code, the first thing done was loop Unrolling. The
+loop was unrolled 4 times and tested with O0, O1, O2 and O3 5 times each.
+
+Here were the unoptomized results at O0:
+
+	data iteration time ave		: 0.07 s
+	calculation iteration time ave	: 0.000032 s
+
+with its size being: 11368
+	
+
+The results were as follows:
+
+O0
+	data iteration time ave		: 0.084 s
+	calculation iteration time ave	: 0.000035 s
+
+O1
+	data iteration time ave		: 0.016 s
+	calculation iteration time ave	: 0.00001 s
+
+O2
+	data iteration time ave		: 0.016 s
+	calculation iteration time ave	: 0.000007 s
+
+O3
+	data iteration time ave		: 0.014 s
+	calculation iteration time ave	: 0.000007 s
+
+with O0 size being 11194
+
+As the data shows, the O0 calculations were actually slightly longer by 2e-6.
+This may be becasue the loop unrappiing perfomred an if statment since the
+code at the beggining. However, the O~ operations were able to drastically
+improve both the data iteration time as well as the calculation time.
+
+
+
+Loop unrolling was attempted again, this time with an unrolling value of 8.
+The results were as follows.
+
+O0
+	data iteration time ave		: 0.066 s
+	calculation iteration time ave	: 0.000034 s
+
+O1
+	data iteration time ave		: 0.018 s
+	calculation iteration time ave	: 0.00001 s
+
+O2
+	data iteration time ave		: 0.016 s
+	calculation iteration time ave	: 0.000007 s
+
+O3
+	data iteration time ave		: 0.014 s
+	calculation iteration time ave	: 0.000007 s
+
+
+
+As the results show, there was an improvement of 0.000001 from the unrolling
+value of 4, but that was still slower by 0.000002.
+
+Based on the data, the loop unrolling attempt seemed to be ineffective and was
+removed.
+
+
+The next optomization technique was increasing the data size form 1 to 100.
+The following were the results:
+
+O0
+	data iteration time ave		: 0.003 s
+	calculation iteration time ave	: 0.000032 s
+
+O1
+	data iteration time ave		: 0.002 s
+	calculation iteration time ave	: 0.00001 s
+
+O2
+	data iteration time ave		: 0.002 s
+	calculation iteration time ave	: 0.000007 s
+
+O3
+	data iteration time ave		: 0.002 s
+	calculation iteration time ave	: 0.000007 s
+
+This had a major performance increase. At the base of O0, taking the data
+iteration time from 0.07 to 0.003. Thats a factor of 10 increase. 
+
+
+
+
+Based on these performance techniques, it was determined that the best, most
+effective solution was to increease the data allocation size to 100 and
+compile the code using either O2 or O3. Doing these techniques would bring
+the codes:
+	data iteration time form 0.06s to 0.003s
+	caculation iteration time from 0.000032 s to 0.000007s
+	size from 11327 to 6010.
+
+
+Our efforts helped contribute to make the world a better place.
+------------------------------------------------------------------------------

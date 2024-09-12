@@ -1,0 +1,985 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
+  *
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted, provided that the following conditions are met:
+  *
+  * 1. Redistribution of source code must retain the above copyright notice, 
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this 
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "cmsis_os.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+RNG_HandleTypeDef hrng;
+
+TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
+
+UART_HandleTypeDef huart2;
+
+osThreadId defaultTaskHandle;
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_RNG_Init(void);
+static void MX_TIM5_Init(void);
+static void MX_TIM4_Init(void);
+void StartDefaultTask(void const * argument);
+
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+#include "string.h"
+
+uint8_t rx_buffer[20];  // Shared buffer between foreground and UART RX
+uint8_t rx_byte;        // the currently received byte
+uint8_t rx_index = 0;   // pointer into the rx_buffer
+SemaphoreHandle_t  transmit_mutex;  // protects UART transmitter resource
+SemaphoreHandle_t  receive_mutex;   // protects UART receiveer resource
+
+
+
+
+
+
+
+
+#define MOV (0x20)
+#define WAIT (0x30)
+#define RECIPE_END (0)
+#define LOOP (0x40)
+#define END_LOOP (0x50)
+#define WAVE ((0x60))
+	
+enum status 
+{
+	status_running,
+	status_paused,
+	status_command_error,
+	status_nested_error 
+} ;
+
+
+
+enum servo_states
+{
+	state_at_position,		// use a separate integer to record the current position (0 through 5) for each servo.
+	state_paused,
+	state_stop,
+	state_moving,
+	state_recipe_ended,
+	state_user_input,
+	state_wave
+} ;
+
+
+
+
+enum events
+{
+	user_entered_left,
+	recipe_ended
+} ;
+
+int bigOof;
+
+
+static enum servo_states current_servo_state = state_paused ;
+static enum servo_states current_servo_state1 = state_paused ;
+static enum status current_status = status_paused;
+static enum status current_status1 = status_paused;
+
+unsigned char recipe3[] = { MOV, 0, MOV, 5, MOV, 0, MOV, 3, LOOP, 0, MOV, 1, MOV, 4, END_LOOP, MOV, 0,MOV, 2,WAIT, 0, MOV, 2, MOV, 3,WAIT, 31,WAIT, 31,WAIT, 31,MOV,4, RECIPE_END } ;
+unsigned char recipe4[] = { MOV, 1, MOV, 0, LOOP, 3, MOV, 5, MOV, 4, END_LOOP, RECIPE_END } ;
+unsigned char recipe5[] = { LOOP, 1, MOV, 0, LOOP, 3, MOV, 5, MOV, 4, END_LOOP, END_LOOP, RECIPE_END } ;
+unsigned char recipe6[] = { MOV,1, WAVE, MOV, 2,MOV, 3,MOV, 0,RECIPE_END } ;
+	
+	
+uint8_t buffer1[1];
+uint8_t buffer2[1];
+
+// Servo 1
+int counter = 0;
+int wait_counter = 0;
+int recipie_count = 0;
+int loop_count = 0;		// loop hanlde
+int loop_position = 0; // loop position
+int position= 0;			// global variable for the position
+	
+// Servo 2
+int position1=0;			// position for servo 2
+int counter1 = 0;
+int wait_counter1 = 0;
+int recipie_count1 = 0;
+int loop_count1 = 0;		// loop hanlde
+int loop_position1 = 0; // loop position
+int wave_counter = 0;
+uint8_t prev_command;
+uint8_t buffer1[1];
+	
+uint8_t command[4];	  // contains user input
+uint8_t buffer4[1];
+
+
+
+
+
+
+
+
+
+
+
+void test_task_init (void);
+void test_task(void* argument);
+void uart_handle_1(void* argument);
+void servo_handle_1 (void* argument);
+void servo_handle_2 (void* argument);
+void LED_handle (void* argument);
+
+/*
+ * prints the string, blocks if UART busy, thus safe from multiple threads
+ */
+void vPrintString(char *message) {
+  xSemaphoreTake(transmit_mutex, ~0);         // Wait forever until the USART is free, then take mutex
+  HAL_UART_Transmit_IT(&huart2, (uint8_t *)message, strlen(message));
+  xSemaphoreGive(transmit_mutex);             // Give up mutex after printing
+}
+
+/*
+ * overrides _weak HAL receiver callback, called when byte received
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  BaseType_t xTaskWoken = pdFALSE;
+  static BaseType_t i_have_receive_mutex = pdFALSE;
+  if(huart->Instance == USART2) {
+
+    // if received byte is a newline, give the received buffer to the forground
+    if(rx_byte == '\r') {
+      xSemaphoreGiveFromISR(receive_mutex, &xTaskWoken);
+      i_have_receive_mutex = pdFALSE;     // We don't have the mutex anymore
+      rx_index = 0;                       // Next time around, queue data from start of buffer
+    }
+    
+    // buffer all characters
+    else {
+      // acquire receive_mutex once
+      if(!i_have_receive_mutex) {
+        xSemaphoreTakeFromISR(receive_mutex,  &xTaskWoken);
+        i_have_receive_mutex = pdTRUE;    // don't need to ask to Take again
+      }
+      
+      // buffer all other characters
+      rx_buffer[rx_index++] = rx_byte;    // buffer the byte
+      rx_buffer[rx_index] = 0;            // keep string NULL terminated
+      if(rx_index >= sizeof(rx_buffer))
+        rx_index = 0;
+    }
+    HAL_UART_Receive_IT(&huart2, &rx_byte, 1);  // one time, kick off receive interrupt (repeated from within callback)
+  }
+}
+
+
+
+
+
+/***************************************************
+ * move()
+ ***************************************************
+ *
+ * responsible for moving the servo based on position
+ *
+ ***************************************************/
+static void move()
+{
+	int final_pos = 0;
+	if(position == 0){
+		final_pos = 320; // 250
+
+	} else if (position == 1){
+		final_pos = 500;
+
+	}
+	else if (position == 2){
+		final_pos = 700;
+
+	}
+	else if (position == 3){
+		final_pos = 900;
+
+	}
+	else if (position == 4){
+		final_pos = 1050;
+
+	}
+	else if (position == 5){
+		final_pos = 1250;
+
+	}
+	
+	// Used to change pulse size	
+	TIM_OC_InitTypeDef sConfigOC = {0};
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = final_pos;																		// 1250 = 2 ms, * by position 1-6
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	
+	HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1);		// configure the new pulse
+	
+	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);												// restart the timer
+}
+
+
+
+
+
+/***************************************************
+ * move1()
+ ***************************************************
+ *
+ * move for servo 2
+ *
+ ***************************************************/
+static void move1()
+{
+	int final_pos = 0;
+	if(position1 == 0){
+		final_pos = 320; // 250
+
+	} else if (position1 == 1){
+		final_pos = 500;
+
+	}
+	else if (position1 == 2){
+		final_pos = 700;
+
+	}
+	else if (position1 == 3){
+		final_pos = 900;
+
+	}
+	else if (position1 == 4){
+		final_pos = 1050;
+
+	}
+	else if (position1 == 5){
+		final_pos = 1250;
+
+	}
+	
+	// Used to change pulse size	
+	TIM_OC_InitTypeDef sConfigOC = {0};
+
+	
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = final_pos;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_1);
+	
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);												// restart the timer
+}
+
+
+
+
+
+
+
+
+
+/*
+ * Initializes mutexes, interrupts, etc.  Creates a test task.
+ */
+char task_names[3][20] = {"1", "2", "3" };
+void test_task_init (void) {
+  transmit_mutex = xSemaphoreCreateMutex();     // create mutex to protect UART transmitter resource
+  receive_mutex = xSemaphoreCreateMutex();      // create mutex to protect UART receiver resource
+  
+  HAL_UART_Receive_IT(&huart2, &rx_byte, 1);    // one time, kick off receive interrupt (repeated from within rx callback)
+	/*for(int ii=0; ii<3; ii++ ) {
+    if (pdPASS != xTaskCreate (test_task,	"test", 256, (void *)&task_names[ii], osPriorityNormal, NULL)) {
+      Error_Handler();
+    }
+	}*/
+	xTaskCreate (uart_handle_1,	"test", 256, (void *)&task_names[1], osPriorityNormal, NULL);
+	xTaskCreate (servo_handle_1,	"test1", 256, (void *)&task_names[2], osPriorityNormal, NULL);
+	xTaskCreate (servo_handle_2,	"test2", 256, (void *)&task_names[3], osPriorityNormal, NULL);
+	
+}
+
+
+
+
+void servo_handle_1(void* argument) {
+  char *msg = (char *)argument;
+  uint32_t random;
+  while(1) {
+		
+		
+		
+			switch ( current_servo_state )
+	{
+	 /********************************
+	  * STATE_AT_POSITON
+		*
+		* Servo stationary at known position
+		* wait for a new command
+		*
+		********************************/
+		case state_at_position :		
+
+			// MOV command received
+	
+			if (recipe3[recipie_count] == 0x20){
+				position = recipe3[recipie_count + 1];
+				buffer4[0] = (char)position;
+				recipie_count += 2; 
+				move();
+				current_servo_state = state_moving;			
+				current_status = status_running;
+			}
+			
+			// RECIPE_END command received
+			
+			if (recipe3[recipie_count] == 0x0){
+				recipie_count = 0;				
+			}
+			
+			// WAIT command received
+			
+			if (recipe3[recipie_count] == 0x30){
+				wait_counter = recipe3[recipie_count + 1];
+				recipie_count += 2;
+				current_servo_state = state_paused;
+				
+				
+			}
+			
+			// LOOP command received
+			
+			if (recipe3[recipie_count] == 0x40){
+				if (loop_count == 0) {											// if it equals 0 then that means there 
+					loop_count = recipe3[recipie_count + 1];	// has been no index from another loop so 
+					loop_position = recipie_count + 2;				// there is no loop issue
+					recipie_count += 2;
+				} else {
+					// loop issue
+						current_status  = status_nested_error; 
+						current_servo_state = state_stop;
+				}
+			}
+			
+			// END_LOOP command received
+			
+			if (recipe3[recipie_count] == 0x50){
+				if (loop_count <= 0){
+					recipie_count += 1;
+					loop_count = 0;
+				} else {
+					recipie_count = loop_position;
+					loop_count--;
+				}
+			}
+			
+						
+			// WAVE_COMMAND
+			
+			if (recipe3[recipie_count] == 0x60){
+				if(current_servo_state != state_moving){	// so the movement key doesnt get cut off
+				current_servo_state = state_wave;
+				}
+			}
+			break;
+
+			
+		/********************************
+	  * STATE_WAVING
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_wave :
+			if (wave_counter <= 25){
+				if (wave_counter == 0 || wave_counter == 5 || wave_counter == 11 || wave_counter == 17 || wave_counter == 23){
+					position = 5;
+					move();
+				}
+				if (wave_counter == 2 ||wave_counter == 8 || wave_counter == 14 || wave_counter == 20){
+					position = 4;
+					move();
+				}
+			  wave_counter++;
+			} else {
+					recipie_count += 1; 
+					current_servo_state = state_moving;			
+					current_status = status_running;
+				  wave_counter = 0;
+				
+				}
+		
+		
+	  /********************************
+	  * STATE_MOVING
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_moving : 
+			if( counter < 10){
+				counter++;
+			} else {
+				current_servo_state = state_at_position;
+				counter = 0;
+				
+
+			}
+
+			break ;
+		
+						
+			
+	  /********************************
+	  * STATE_PAUSED
+		*
+		* Servo is in a waiting state
+		* wait 100ms for each tick on the counter
+		*
+		********************************/
+		case state_paused :
+			if( counter <= wait_counter){
+				counter++;
+			} else{
+				current_servo_state = state_at_position;
+				counter = 0;
+			}
+			break ;
+	
+			
+	  /********************************
+	  * STATE_RECIPE_ENDED
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_recipe_ended :
+			break ;
+		
+		
+		/********************************
+	  * STATE_STOP
+		*
+		* Servo is stopped
+		* dont do anything
+		*
+		********************************/
+		case state_stop :
+			break ;
+		
+		
+		
+		
+		/********************************
+	  * STATE_USER_INPUT
+		*
+		* User has inputed a command
+		* execute based on command
+		*
+		********************************/
+		case state_user_input:
+			if (command[3] == 'p' || command[3]== 'P'){
+				current_servo_state = state_stop;
+				current_status  = status_paused; 
+			}
+			
+			else if (command[3] == 'c' || command[3]== 'C'){
+				current_servo_state = state_at_position;
+				current_status  = status_running; 
+			}
+			
+			else if (command[3] == 'r' || command[3]== 'R'){		
+				if (position != 0){
+					position = position - 1;
+					move();
+					current_servo_state = state_stop;
+				}
+			}
+			
+			else if (command[3] == 'l' || command[3]== 'L'){
+				if (position != 5){
+					position = position + 1;
+					move();
+					current_servo_state = state_stop;
+				}	
+			}
+						
+			else if (command[3] == 'n' || command[3]== 'N'){
+				//current_servo_state = state_at_position;
+			}
+			
+			else if (command[3] == 'b' || command[3]== 'B'){
+				recipie_count = 0;
+				current_servo_state = state_at_position;
+				current_status  = status_running; 
+			} else {
+				current_status  = status_command_error; 
+				current_servo_state = state_stop;
+				
+				
+			}
+			
+			break;
+	}
+		
+		
+		
+		
+		
+		
+		
+		
+    
+		
+		
+		osDelay(100);
+	}
+	
+}
+
+void servo_handle_2(void* argument) {
+  char *msg = (char *)argument;
+  uint32_t random;
+  while(1) {
+    
+		
+		
+		
+		switch ( current_servo_state1 )
+	{
+	 /********************************
+	  * STATE_AT_POSITON
+		*
+		* Servo stationary at known position
+		* wait for a new command
+		*
+		********************************/
+		case state_at_position :		
+
+			// MOV command received
+	
+			if (recipe4[recipie_count1] == 0x20){
+				position1 = recipe4[recipie_count1 + 1];
+				recipie_count1 += 2; 
+				move1();
+				current_servo_state1 = state_moving;	
+				current_status1 = status_running;
+			}
+			
+			// RECIPE_END command received
+			
+			if (recipe4[recipie_count1] == 0x0){
+				recipie_count1 = 0;				
+			}
+			
+			// WAIT command received
+			
+			if (recipe4[recipie_count1] == 0x30){
+				wait_counter1 = recipe4[recipie_count1 + 1];
+				recipie_count1 += 2;
+				current_servo_state1 = state_paused;
+			}
+			
+			// LOOP command received
+			
+			if (recipe4[recipie_count1] == 0x40){
+				if (loop_count1 == 0) {											// if it equals 0 then that means there 
+					loop_count1 = recipe4[recipie_count1 + 1];	// has been no index from another loop so 
+					loop_position1 = recipie_count1 + 2;				// there is no loop issue
+					recipie_count1 += 2;
+				} else {
+					current_status1  = status_nested_error; 
+					current_servo_state1 = state_stop;
+
+				}
+			}
+			
+			// END_LOOP command received
+			
+			if (recipe4[recipie_count1] == 0x50){
+				if (loop_count1 <= 0){
+					recipie_count1 += 1;
+					loop_count1 = 0;
+				} else {
+					recipie_count1 = loop_position1;
+					loop_count1--;
+				}
+			}
+			
+			// WAVE_COMMAND
+			
+			if (recipe4[recipie_count1] == 0x60){
+				if(current_servo_state1 != state_moving){	// so the movement key doesnt get cut off
+				current_servo_state1 = state_wave;
+				}
+			}
+			break;
+		
+		
+	  /********************************
+	  * STATE_WAVING
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_wave :
+			if (wave_counter <= 25){
+				if (wave_counter == 0 || wave_counter == 5 || wave_counter == 11 || wave_counter == 17 || wave_counter == 23){
+					position1 = 5;
+					move1();
+				}
+				if (wave_counter == 2 ||wave_counter == 8 || wave_counter == 14 || wave_counter == 20){
+					position1 = 4;
+					move1();
+				}
+			  wave_counter++;
+			} else {
+					recipie_count1 += 1; 
+					current_servo_state1 = state_moving;			
+					current_status1 = status_running;
+				 wave_counter = 0;
+				
+				}
+			
+	  /********************************
+	  * STATE_MOVING
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_moving : 
+			if( counter1 < 10){
+				counter1++;
+			} else {
+				current_servo_state1 = state_at_position;
+				counter1 = 0;
+				
+			}
+
+			break ;
+		
+			
+	  /********************************
+	  * STATE_PAUSED
+		*
+		* Servo is in a waiting state
+		* wait 100ms for each tick on the counter
+		*
+		********************************/
+		case state_paused :
+			if( counter1 <= wait_counter1){
+				counter1++;
+			} else{
+				current_servo_state1 = state_at_position;
+				counter1 = 0;
+			}
+			break ;
+	
+			
+	  /********************************
+	  * STATE_RECIPE_ENDED
+		*
+		* Servo is moving
+		* wait 1000ms for move to end
+		*
+		********************************/
+		case state_recipe_ended :
+			break ;
+		
+		
+		/********************************
+	  * STATE_STOP
+		*
+		* Servo is stopped
+		* dont do anything
+		*
+		********************************/
+		case state_stop :
+			break ;
+		
+		
+		/********************************
+	  * STATE_USER_INPUT
+		*
+		* User has inputed a command
+		* execute based on command
+		*
+		********************************/
+		case state_user_input:
+			if (command[2] == 'p' || command[2]== 'P'){
+				current_servo_state1 = state_stop;
+				current_status1  = status_paused; 
+			}
+			
+			else if (command[2] == 'c' || command[2]== 'C'){
+				current_servo_state1 = state_at_position;
+				current_status1  = status_running;
+			}
+			
+			else if (command[2] == 'r' || command[2]== 'R'){		
+				if (position1 != 0){
+					position1 = position1 - 1;
+					move1();
+					current_servo_state1 = state_stop;
+				}
+			}
+			
+			else if (command[2] == 'l' || command[2]== 'L'){
+				if (position1 != 5){
+					position1 = position1 + 1;
+					move1();
+					current_servo_state1 = state_stop;
+				}	
+			}
+						
+			else if (command[2] == 'n' || command[2]== 'N'){
+				//current_servo_state1 = state_at_position;
+			}
+			
+			else if (command[2] == 'b' || command[2]== 'B'){
+				recipie_count1 = 0;
+				current_servo_state1 = state_at_position;
+				current_status1  = status_running;
+			} else {
+				
+				current_status1  = status_command_error; 
+				current_servo_state1 = state_stop;
+			}
+			
+			break;
+	}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		osDelay(100);
+		
+	}
+	
+}
+
+void LED_handle(void* argument) {
+  char *msg = (char *)argument;
+  uint32_t random;
+  while(1) {
+   	if (current_status  == status_running && current_status1 == status_running){
+		HAL_GPIO_WritePin(RED_LED_GPIO_Port,RED_LED_Pin,GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GREEN_LED_GPIO_Port,GREEN_LED_Pin,GPIO_PIN_SET);
+		
+	} else if (current_status  == status_paused || current_status1 == status_paused){
+		HAL_GPIO_WritePin(RED_LED_GPIO_Port,RED_LED_Pin,GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GREEN_LED_GPIO_Port,GREEN_LED_Pin,GPIO_PIN_RESET);
+		
+		
+	} else if (current_status  == status_command_error || current_status1 == status_command_error){
+		HAL_GPIO_WritePin(RED_LED_GPIO_Port,RED_LED_Pin,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GREEN_LED_GPIO_Port,GREEN_LED_Pin,GPIO_PIN_RESET);
+		
+	} else if (current_status  == status_nested_error || current_status1 == status_nested_error){
+		HAL_GPIO_WritePin(RED_LED_GPIO_Port,RED_LED_Pin,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GREEN_LED_GPIO_Port,GREEN_LED_Pin,GPIO_PIN_SET);
+		
+	}
+		
+		
+
+
+osDelay(100);		
+	}
+	
+}
+
+
+void uart_handle_1(void* argument) {
+  char *msg = (char *)argument;
+  uint32_t random;
+  while(1) {
+		
+		    // check to see if something has arrived over UART (e.g. a user command)
+    if(rx_buffer[0] && (pdTRUE == xSemaphoreTake(receive_mutex, 0))) {  // if we Take mutex, ISR stops receiving chars
+      vPrintString((char *)rx_buffer);   // something arrived, stop receiving chars, print what we have.
+      rx_buffer[0] = 0;  // flag ourself to NOT try to Take mutex until after ISR has received a new char (and owns mutex)
+      command[2] = rx_buffer[0];
+			command[3] = rx_buffer[1];
+			xSemaphoreGive(receive_mutex);
+    } 
+    else {
+      vPrintString(msg);
+    }
+		
+		
+    osDelay(100);
+	}
+	
+}
+
+
+
+
+/*
+ * just some old task that periodically prints strings in a safe manner
+ */
+void test_task(void* argument) {
+  char *msg = (char *)argument;
+  uint32_t random;
+  while(1) {
+    
+    // check to see if something has arrived over UART (e.g. a user command)
+    if(rx_buffer[0] && (pdTRUE == xSemaphoreTake(receive_mutex, 0))) {  // if we Take mutex, ISR stops receiving chars
+      vPrintString((char *)rx_buffer);   // something arrived, stop receiving chars, print what we have.
+      rx_buffer[0] = 0;  // flag ourself to NOT try to Take mutex until after ISR has received a new char (and owns mutex)
+      xSemaphoreGive(receive_mutex);
+    } 
+    else {
+      vPrintString(msg);
+    }
+		
+		osDelay(100);
+		
+
+
+	TIM_OC_InitTypeDef sConfigOC = {0};
+
+	
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 1050;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_1);
+	
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);			
+    
+    // wait for some random time
+
+    HAL_RNG_GenerateRandomNumber(&hrng, &random);
+    osDelay(100 + random&0xff);   // delay with jitter
+	
+	
+
+
+	
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	
+			if (bigOof == 1){
+  sConfigOC.Pulse = 300;
+			} else if (bigOof == 2){
+				sConfigOC.Pulse = 700;
+			} else if (bigOof == 3){
+				sConfigOC.Pulse = 1050;
+			} else {
+				bigOof =0;
+			}
+				
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1);
+	
+	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);			
+    
+    // wait for some random time
+
+    HAL_RNG_GenerateRandomNumber(&hrng, &random);
+    osDelay(100 + random&0xff);   // delay with jitter
+	
+	
+
+
+		
+
+		bigOof++;
+  }
+}  

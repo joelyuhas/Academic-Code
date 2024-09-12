@@ -1,0 +1,225 @@
+------------------------------------------------------------------------------
+Homework 5
+Joel Yuhas
+3/25/18
+
+Analysis.txt
+------------------------------------------------------------------------------
+Begingin the implementation, learning about the get_long_only
+
+Got the Makefile working. Had a little issue figureing out how to get 
+rootfinding.c to compile to .o byitself but it works now. Now working on the 
+driver.
+
+Got the driver working where it can pass in the arguments to the functions
+successfully. Now need to implement the Bisection, Newton, and Secant methods.
+
+Got all of the methods working! the Secant seems to be very fidgety but all of
+the values can find the same roots, which is good. It also means that since
+they can find the same roots, the derivative and function implementation are
+most likely correct. Cleaning up the code so i can move to the QN and timing
+portions.
+
+When implementing the eqn2solve, did some sec^2 conversion to tan
+
+NOTE: Changed the rootfinding.h to contain a variable "iterations" which
+is used in all of the methods to monitor the iteration amount. 
+
+Also not sure if verbose wants to turn ALL outputs off or just print out the
+last/final portion. I dont think it makes sense to have it print NOTHING out
+so I have my verbose flag, if on, print out all iterations while if its off,
+it prints just the last ones.
+
+Performing some cleaing of the code. Even though I have the main functionality
+done there is still alot to do. Still need to:
+	- Perform timing implimetation
+	- perform optimization compiling
+	- Create the QN implementation of Bisection
+
+need to implement initTest
+------------------------------------------------------------------------------
+First Section: Performance, Opitimization, and explination
+------------------------------------------------------------------------------
+NOTE: The verbose flag and the -DEN_TIME flag were manually turned on and
+off in the Make file while testing. The data presented is most likely
+overwitten in the out.txt and the final MakeFile configuration may be
+differnt.
+
+The iterations were set to 80,000 times
+All the bounds and inputs are set to the specified values from the packet
+
+------------------------------------------------------------------------------
+Bisection
+root = 1.99114
+------------------------------
+Opimization : Time Per Cylce : Iterations 
+O0		8.0e-6		24
+O1		7.8e-6		24
+O2		7.8e-6		24
+
+
+Secant
+[-1.5, 2.0] root = 1.98046 
+[1.5, 5]    root = 5.7326
+------------------------------
+------------------------------------------------------------------------------
+Opt : TimePerCylce [-1.5, 2.0]: TimePerCycle [1.5,5] : I[-1.5] : I[1.5]
+O0		6.6e-6			4.2e-6		13	8				
+O1		6.4e-6			4.2e-6		13	8	
+O2		6.2e-6			4.2e-6		13	8
+
+
+Newton
+[-1.5] root = -76.22337
+[1.5] root = 1.99114
+------------------------------
+Opimization : Time Per Cylce [-1.5]: Time Per Cycle [1.5] :  I[-1.5] : I[1.5]
+O0			5.6e-6			2.6e-6		8	5
+O1			3.6e-6			2.2e-6		8	5
+O2			3.6e-6			2.0e-6		8	5
+
+-----------------------------
+As the data shows, The optimization deffinitally has an effect on the
+perfomance, but also, the method has a drastic difference on the performance
+as well. All across the board, all methods saw improvement going form O0 to
+O2. Some saw very little difference, like the secant method (6.6 to 6.2) while
+the Newton method was much greater (5.6 to 3.6).
+
+The values were given as well to be able to compare the different methods
+when they were evaluating the same values. The Bisection, Secant [-1.5] and
+Newton [1.5] all evaluated the same root of 1.99. The Newton method was
+considerably faster than either of the others. In fact twice as fast as 
+the Secant method and four times as fast as the bisect method.
+
+-----------------------------
+WHAT IS THE BEST RESULT?
+-----------------------------
+The best results appears to be the Newton method at optimization O2.
+
+----------------------------------------------------------------
+JUSTIFY YOUR CHOICE FOR SECOND PONINT IN SECANT
+----------------------------------------------------------------
+For [-1.5, 2.0]: 2 was chosen so that Secant could test for the 1.99 root
+		 this way it could be easily compared performance wise to
+	   	 the other methods.
+For [1.5, 5]   : A larger number such as 5 was used in order to get a
+		 large interval in order to see how it impacted the data
+
+------------------------------------
+EXPLINATION FOR ITERATIONS
+------------------------------------
+
+Version/Method : iterations : root
+B		     24		1.99114
+S[-1.5]	             13		1.98046 
+S[1.5]		     8		5.7326
+N[-1.5]	             8		-76.22337
+N[1.5]		     5		1.99114
+
+
+I looked at an actual graph of the equation and these all appear
+to be actual roots. The only one I am unsure about is the -76.22 root.
+However i do beleive this is a real root, as in the graph, around
+that value it would make sense that the tangent would go farther away
+than expected. This is also why it probably has a large iteration value
+compared to the 1.999
+
+The secant 1.5 root of 5.7 i know is a real root after looking at
+the graph. The fact that it did it in 8 iterations is relativly suprising
+considering how far away it was from 5.
+
+The 1.5 Newton could also proabably of been the smallest since it was
+so close to the root.
+
+however with the secant method, even though its bounds were close to the
+1.9 root, it has more calculations it needs to do, which could of caused
+it to go out farther or bounce around longer. that would explain why its
+iterations are around 13
+
+The bisect method makes sense that it woudl be the highest, since it
+does a simple divide by 2, and would proceed at a very log(n) type rate.
+
+Not only Was the newton method the fastest, but it was able to perform
+the calculations in the least amount of roots. That is expected, and in fact
+the number of roots appears to directly correliate with the amount of time
+it took to get the root.
+
+the newton method was about twice as fast as the secant method, which was
+about twice as fast ast the Bisect method, just like the timing. 
+
+In all honesty, Im not sure what the "explanation of number of iterations" 
+thats in the homework outline means. This is the data I got from running the
+program and the number of iterations it took to get to this root.  I hope
+that my explanations are enough to satisfy the grading criteria.
+
+
+------------------------------------------------------------------------------
+
+
+
+
+
+			---------!!!!! NOTE !!!!!----------
+Currently, in the make file the -DEN_TIME flag is turned off and 
+all the verbose flags are turned on. In order to test for timing again, 
+these values must be changed in the makefile.
+
+
+
+------------------------------------------------------------------------------
+Second Section: QN 
+------------------------------------------------------------------------------
+
+Creating QN. Going to start with a N of 8
+started with n of 8, could not get the right answer. Bumped it up to  16. Got 
+a completely weird answer of -46. Im pretty confident I have implemented the
+function correctly but I keep getting wrong results. Going to bump it up more
+
+Got it working. I was multiplying the FIX's the wrong way in the equation
+formula.
+
+cleaning up so that that I can run may iterations. Currently I have a
+significant amount of print statemetns
+
+I changed up the final printout for the intTest so its easier to compare the
+output results of the two
+
+Ran into an issue with the QN where it was just bouncing back and forth after
+a certain number of iterations. Looking to see if i can fix it now.
+
+OK, FINALLY got all of the QN to work properly, and to print properly. Going
+to display my data that I have collected now. The timing had to be set to
+50,000 iterations in order to get readings. The times are per cycle.
+
+------------------------------------------------------------------------------
+QN DATA
+------------------------------------------------------------------------------
+
+	QN : FIXED RESULT: FIXED TIME: FLOAT RESULT: FLOAT TIME
+	4	0.6875	     2.0e-7        0.6    	6.0e-7		
+	8       0.605469     2.0e-7        0.6          6.0e-7 
+	16      0.600037     4.0e-7        0.6          6.0e-7 
+	32     (QN TOO BIG, FLOATING POINT EXCEPTION)
+
+
+AS the data shows, the QN version is significantly faster. Basically 3 times
+as fast as the double counter part. However this is at the cost of accuracy.
+0.6875 is 14% too large, which is pretty substantial. However, when the QN
+was increased to 8, it was much more accurate while maintaining its speed.
+
+------------------------------------------------------------------------------
+Why does changeing the Qn value change the error?
+------------------------------------------------------------------------------
+
+Based on my understanding. The large the QN, the more accurate the variable
+can be. So when the QN value is rather small, the accuracy degrades since
+the variable itself cannot handle enough percision.
+
+NOTE: Each case was ran 5 times with the exact same results. The consistency
+is probably due to the fact that there is almost no I/O and reading form
+memory. Also QN is currently set to 4 for the fastest time.
+
+Also Note That The QN is currently set for the timing. Certain print
+statements in the code were commented out in order to make this possible.
+
+------------------------------------------------------------------------------

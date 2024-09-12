@@ -1,0 +1,39 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity tb is
+end tb;
+
+architecture behavior of tb is
+component adder4
+port
+(
+a	:in std_logic_vector (3 downto 0);
+b	:in std_logic_vector (3 downto 0);
+
+
+
+sum	:out std_logic_vector(3 downto 0); 
+cout	:out std_logic);
+
+
+end component;
+
+
+signal sA: std_logic_vector (3 downto 0) := (others => '0');
+signal sB: std_logic_vector (3 downto 0) :=(others => '0');
+--signal sCin: std_logic :='0';
+
+signal sSum: std_logic_vector (3 downto 0) :=(others => '0');
+signal sCout: std_logic :='0';
+
+for UUT : adder4 use entity work.adder4(df);
+
+begin
+UUT: adder4 port map (a => sA, b => sB, sum => sSum, cout=>sCout);
+
+sA <= not SA after 50 ns;
+sB <= not Sb after 100 ns;
+--sCin <= not sCin after 300 ns;
+
+end;
