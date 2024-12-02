@@ -12,7 +12,7 @@ Main collection of code performed from 2014-2019 during college. Stats the codin
 #### Computer Science II:
 - Java, 2015, Futher development into computer science. 
 #### Computer Vision
-- Python, 2019, Main and Final project using Python and Jupyter Notebook. Used machine learning and computer vision. Final project trained a computer vision model on fruit recognition. Training data has been put in zip file to make easier on transfers.
+- Python, 2019, Main and Final project using Python and Jupyter Notebook. Used machine learning and computer vision. Final project trained a computer vision model on fruit recognition. Training data was too large to put on GitHub.
 #### Differential Privacy 
 - Python, 2019, Security in Machine Learing Masters Course final project, using differential privacy and tensor flow to estimate individual income based on census data. Using privacy techniques to ensure individual data is kept secure.
 #### Digital_IC 
