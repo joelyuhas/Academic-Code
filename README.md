@@ -1,25 +1,25 @@
 # Academic-Code
-Main collection of code performed from 2014-2019 during college.
+Main collection of code performed from 2014-2019 during college. Stats the coding language and year first.
 
 ## High Level Breakdown
 
 #### Applied Programming
-- 8 main homeworks projects in C, utilized makefiles, 2017.
+- C, 2018, 8 main homeworks and projects, utilized makefiles.
 #### Assembly
-- Main 13 lab projects all done in assembly, 2017.
+- Assembly, 2017, Main 13 lab projects.
 #### Computer Science I
-- Introduction to comp sci and Python, 2015.
+- Python, 2015, Introduction to computer science methodologies.
 #### Computer Science II:
-- Futher comp sci learing in Java, 2015.
+- Java, 2015, Futher development into computer science. 
 #### Computer Vision
-- Main projects and Final project using Python and Jupyter Notebook. Used machine learning and computer vision. Final project trained a computer vision model on fruit recognition. Training data has been put in zip file to make easier on transfers, 2019
+- Python, 2019, Main and Final project using Python and Jupyter Notebook. Used machine learning and computer vision. Final project trained a computer vision model on fruit recognition. Training data has been put in zip file to make easier on transfers.
 #### Differential Privacy 
-- Security in Machine Learing Masters Course final project, using differential privacy and tensor flow to estimate individual income based on census data. Using privacy techniques to ensure individual data is kept secure, 2019.
+- Python, 2019, Security in Machine Learing Masters Course final project, using differential privacy and tensor flow to estimate individual income based on census data. Using privacy techniques to ensure individual data is kept secure.
 #### Digital_IC 
-- VHDL class homework and exercieses, 2018.
+- VHDL, 2018, Class homework and exercises.
 #### Embeddeed Systemes 
-- Primary projects in C using micro-controllers, 2018.
+- C, 2018, Primary projects in C using micro-controllers.
 #### Integrated and Digital Electonics 
-- Main labs and NXP cup final project. Using C and microcontroller to create drivers and control line scanning car, 2018.
+- C, 2017, Main labs and NXP cup final project. Using C and microcontroller to create drivers and control line scanning car.
 #### Matlab
-- Miscellaneous Matlab projects and homeworks.
+- Matlab, Miscellaneous projects and homeworks.
